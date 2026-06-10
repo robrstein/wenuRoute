@@ -134,7 +134,11 @@ python -m pytest tests/test_parsers.py::TestPythonParser::test_detects_flask_rou
 
 ## Licencia
 
-MIT
+GPL v3 (GNU General Public License v3.0)
+
+Este programa es software libre: puedes redistribuirlo y/o modificarlo bajo los términos de la Licencia Pública General de GNU publicada por la Free Software Foundation, ya sea la versión 3 de la Licencia, o (a tu elección) cualquier versión posterior.
+
+Ver el archivo [LICENSE](LICENSE) para más detalles.
 
 ## Screenshots
 
