@@ -138,10 +138,9 @@ MIT
 
 ## Screenshots
 
-<h2>Screenshots</h2>
-
 <p>
-  <img src="screenshot/wenuRoute_Screenshot_2.jpg" alt="Screenshot 2" width="600">
+ <img src="https://raw.githubusercontent.com/robrstein/wenuRoute/main/screenshot/wenuRoute_Screenshot_2.jpg" alt="Screenshot 2">
+
 </p>
 
 <p>
