@@ -135,3 +135,19 @@ python -m pytest tests/test_parsers.py::TestPythonParser::test_detects_flask_rou
 ## Licencia
 
 MIT
+
+## Screenshots
+
+<h2>Screenshots</h2>
+
+<p>
+  <img src="screenshot/wenuRoute_Screenshot_2.jpg" alt="Screenshot 2" width="600">
+</p>
+
+<p>
+  <img src="screenshot/wenuRoute_Screenshot_3.jpg" alt="Screenshot 3" width="600">
+</p>
+
+<p>
+  <img src="screenshot/wenuRoute_Screenshot_4.jpg" alt="Screenshot 4" width="600">
+</p>
