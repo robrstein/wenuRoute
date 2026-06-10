@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wenuroute"
+version = "0.1.0"
+description = "Multiplatform code analysis tool that shows execution routes as navigable visual graphs"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = [
+    "pyvis>=0.3.2",
+    "beautifulsoup4>=4.12",
+    "click>=8.1",
+    "networkx>=3.1",
+    "lxml>=4.9",
+    "rich>=13.0",
+]
+
+[project.scripts]
+wenuroute = "wenuroute.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["wenuroute*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+

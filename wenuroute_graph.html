@@ -1,0 +1,896 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 100vh;
+                 background-color: #1a1a2e;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+             #loadingBar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width: 100%;
+                 height: 100vh;
+                 background-color:rgba(200,200,200,0.8);
+                 -webkit-transition: all 0.5s ease;
+                 -moz-transition: all 0.5s ease;
+                 -ms-transition: all 0.5s ease;
+                 -o-transition: all 0.5s ease;
+                 transition: all 0.5s ease;
+                 opacity:1;
+             }
+
+             #bar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width:20px;
+                 height:20px;
+                 margin:auto auto auto auto;
+                 border-radius:11px;
+                 border:2px solid rgba(30,30,30,0.05);
+                 background: rgb(0, 173, 246); /* Old browsers */
+                 box-shadow: 2px 0px 4px rgba(0,0,0,0.4);
+             }
+
+             #border {
+                 position:absolute;
+                 top:10px;
+                 left:10px;
+                 width:500px;
+                 height:23px;
+                 margin:auto auto auto auto;
+                 box-shadow: 0px 0px 4px rgba(0,0,0,0.2);
+                 border-radius:10px;
+             }
+
+             #text {
+                 position:absolute;
+                 top:8px;
+                 left:530px;
+                 width:30px;
+                 height:50px;
+                 margin:auto auto auto auto;
+                 font-size:22px;
+                 color: #000000;
+             }
+
+             div.outerBorder {
+                 position:relative;
+                 top:400px;
+                 width:600px;
+                 height:44px;
+                 margin:auto auto auto auto;
+                 border:8px solid rgba(0,0,0,0.1);
+                 background: rgb(252,252,252); /* Old browsers */
+                 background: -moz-linear-gradient(top,  rgba(252,252,252,1) 0%, rgba(237,237,237,1) 100%); /* FF3.6+ */
+                 background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(252,252,252,1)), color-stop(100%,rgba(237,237,237,1))); /* Chrome,Safari4+ */
+                 background: -webkit-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Chrome10+,Safari5.1+ */
+                 background: -o-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Opera 11.10+ */
+                 background: -ms-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* IE10+ */
+                 background: linear-gradient(to bottom,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* W3C */
+                 filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fcfcfc', endColorstr='#ededed',GradientType=0 ); /* IE6-9 */
+                 border-radius:72px;
+                 box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+             }
+             
+
+             
+
+             
+        </style>
+    <style id="wr-style">
+#wr-panel {
+  position: fixed; top: 0; left: 0;
+  width: 265px; height: 100vh;
+  background: #12122a;
+  border-right: 1px solid #2a2a5a;
+  overflow-y: auto; z-index: 1000;
+  padding: 14px 12px; box-sizing: border-box;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: #e0e0e0; font-size: 13px;
+}
+#mynetwork {
+  margin-left: 265px !important;
+  width: calc(100% - 265px) !important;
+}
+#loadingBar {
+  left: 265px !important;
+  width: calc(100% - 265px) !important;
+}
+#wr-title {
+  font-size: 15px; font-weight: 700; color: #7aa2f7;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1px solid #2a2a5a;
+}
+.wr-section { margin-bottom: 14px; }
+.wr-section-title {
+  font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.9px; color: #6272a4; margin-bottom: 6px;
+}
+.wr-check-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 2px 0; cursor: pointer;
+}
+.wr-check-item input { cursor: pointer; accent-color: #7aa2f7; }
+.wr-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.wr-layer-btn {
+  display: block; width: 100%; padding: 5px 9px; margin-bottom: 4px;
+  border: 1px solid #3d3d6e; background: #1e1e3f; color: #e0e0e0;
+  border-radius: 5px; font-size: 12px; cursor: pointer;
+  text-align: left; transition: background 0.12s;
+}
+.wr-layer-btn.active { background: #2d3a6e; border-color: #7aa2f7; }
+.wr-layer-btn:hover { background: #252550; }
+#wr-search {
+  width: 100%; padding: 6px 9px;
+  border: 1px solid #3d3d6e; background: #1e1e3f;
+  color: #e0e0e0; border-radius: 5px;
+  font-size: 12px; box-sizing: border-box; outline: none;
+}
+#wr-search:focus { border-color: #7aa2f7; }
+#wr-search-info { font-size: 11px; color: #6272a4; margin-top: 4px; min-height: 16px; }
+.wr-btn {
+  display: block; width: 100%; padding: 6px 9px; margin-bottom: 5px;
+  border: 1px solid #3d3d6e; background: #1e1e3f; color: #e0e0e0;
+  border-radius: 5px; font-size: 12px; cursor: pointer;
+  text-align: left; transition: background 0.12s;
+}
+.wr-btn:hover { background: #252550; }
+#wr-stats {
+  font-size: 11px; color: #6272a4;
+  padding-top: 10px; border-top: 1px solid #2a2a5a; line-height: 1.7;
+}
+/* focus mode banner + exit button */
+#wr-focus-banner {
+  display: none; background: #0d2444;
+  border: 1px solid #2196F3; border-radius: 5px;
+  padding: 7px 9px; margin-bottom: 6px;
+  font-size: 11px; color: #90c8ff; line-height: 1.5;
+}
+#wr-focus-exit {
+  display: none; width: 100%; padding: 5px 9px; margin-bottom: 6px;
+  border: 1px solid #2196F3; background: #0d2444; color: #90c8ff;
+  border-radius: 5px; font-size: 12px; cursor: pointer;
+  text-align: left; box-sizing: border-box; transition: background 0.12s;
+}
+#wr-focus-exit:hover { background: #1a3a6e; }
+/* right-click context menu */
+#wr-ctx-menu {
+  display: none; position: fixed; z-index: 9999;
+  background: #1a1a3a; border: 1px solid #3d3d6e;
+  border-radius: 7px; padding: 4px 0; min-width: 210px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+.wr-ctx-title {
+  padding: 6px 14px 5px; font-size: 10px; color: #7aa2f7;
+  font-weight: 700; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; max-width: 220px;
+  border-bottom: 1px solid #2a2a5a; margin-bottom: 3px;
+}
+.wr-ctx-item {
+  padding: 7px 14px; font-size: 12px; color: #e0e0e0;
+  cursor: pointer; white-space: nowrap;
+}
+.wr-ctx-item:hover { background: #2d3a6e; }
+.wr-ctx-separator { height: 1px; background: #2a2a5a; margin: 3px 0; }
+/* ── Detail panel ─────────────────────────────────────── */
+body.wr-detail-open #mynetwork {
+  width: calc(100% - 265px - 280px) !important;
+}
+#wr-detail {
+  position: fixed; top: 0; right: -280px;
+  width: 280px; height: 100vh;
+  background: #12122a; border-left: 1px solid #2a2a5a;
+  overflow-y: auto; z-index: 998; box-sizing: border-box;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: #e0e0e0; font-size: 13px;
+  transition: right 0.2s ease;
+}
+#wr-detail.wr-open { right: 0; }
+#wr-det-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 12px 8px; border-bottom: 1px solid #2a2a5a;
+  position: sticky; top: 0; background: #12122a; z-index: 1;
+}
+#wr-det-header-title { font-size: 11px; color: #6272a4; text-transform: uppercase; letter-spacing: 0.8px; }
+#wr-det-close { background: none; border: none; color: #6272a4; cursor: pointer; font-size: 18px; padding: 0 2px; line-height: 1; }
+#wr-det-close:hover { color: #e0e0e0; }
+#wr-det-body { padding: 12px; }
+.wr-det-kind-row { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+.wr-det-kind { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #6272a4; }
+.wr-det-name { font-size: 16px; font-weight: 700; color: #e8e8ff; margin-bottom: 12px; word-break: break-word; line-height: 1.3; }
+.wr-det-prop { margin-bottom: 8px; }
+.wr-det-prop-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #6272a4; margin-bottom: 2px; }
+.wr-det-prop-val { font-size: 11px; color: #c0c0d0; word-break: break-all; font-family: 'Consolas', 'Courier New', monospace; background: #1e1e3f; padding: 4px 7px; border-radius: 4px; display: block; }
+.wr-det-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #6272a4; margin: 12px 0 5px; padding-top: 10px; border-top: 1px solid #2a2a5a; }
+.wr-det-conn { display: flex; align-items: center; gap: 8px; padding: 5px 7px; border-radius: 5px; cursor: pointer; font-size: 12px; color: #c0d0ff; margin-bottom: 2px; border: 1px solid transparent; transition: background 0.1s; }
+.wr-det-conn:hover { background: #1e2a4e; border-color: #3d4d7e; }
+.wr-det-conn-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.wr-det-empty { font-size: 11px; color: #4a4a6a; font-style: italic; padding: 4px 0; }
+.wr-det-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+/* ── Minimap ──────────────────────────────────────────── */
+#wr-minimap {
+  position: fixed; bottom: 14px; right: 14px;
+  width: 204px; background: #12122a;
+  border: 1px solid #2a2a5a; border-radius: 8px;
+  padding: 6px 8px 8px; z-index: 997;
+  box-shadow: 0 4px 16px rgba(0,0,0,.55);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  transition: right 0.2s ease;
+}
+body.wr-detail-open #wr-minimap { right: calc(280px + 14px); }
+#wr-minimap-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 5px;
+}
+#wr-minimap-label { font-size: 10px; color: #6272a4; text-transform: uppercase; letter-spacing: 0.8px; }
+#wr-minimap-hide { background: none; border: none; color: #6272a4; cursor: pointer; font-size: 14px; padding: 0 2px; line-height: 1; }
+#wr-minimap-hide:hover { color: #e0e0e0; }
+#wr-minimap-canvas { display: block; width: 100%; border-radius: 4px; cursor: crosshair; border: 1px solid #1e1e3f; }
+</style>
+</head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="wr-panel"><div id="wr-title">⚡ WenuRoute</div><div class="wr-section"><div class="wr-section-title">Buscar nodo</div><input type="text" id="wr-search" placeholder="nombre o archivo…"><div id="wr-search-info"></div></div><div class="wr-section"><div class="wr-section-title">Capa del proyecto</div><button class="wr-layer-btn active" data-layer="backend">⚙️ Backend</button><button class="wr-layer-btn active" data-layer="frontend">🌐 Frontend</button></div><div class="wr-section"><div class="wr-section-title">Tipo de nodo</div><label class="wr-check-item"><input type="checkbox" checked data-kind="endpoint"><span class="wr-dot" style="background:#FF9800"></span><span>Endpoint</span></label><label class="wr-check-item"><input type="checkbox" checked data-kind="function"><span class="wr-dot" style="background:#2196F3"></span><span>Function</span></label><label class="wr-check-item"><input type="checkbox" checked data-kind="module"><span class="wr-dot" style="background:#607D8B"></span><span>Module</span></label><label class="wr-check-item"><input type="checkbox" checked data-kind="sql"><span class="wr-dot" style="background:#F44336"></span><span>SQL</span></label></div><div class="wr-section"><button class="wr-btn" id="wr-cluster-btn">📁 Agrupar por módulo</button><button class="wr-btn" id="wr-fit-btn">⊞ Encuadrar todo</button><button class="wr-btn" id="wr-physics-btn">▶ Activar física</button><button class="wr-btn" id="wr-minimap-btn">🗺 Ocultar minimapa</button></div><div id="wr-focus-banner"></div><button id="wr-focus-exit">↩ Salir del modo foco</button><div id="wr-stats"></div></div>
+<div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+            <div id="loadingBar">
+              <div class="outerBorder">
+                <div id="text">0%</div>
+                <div id="border">
+                  <div id="bar"></div>
+                </div>
+              </div>
+            </div>
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#607D8B", "font": {"color": "#e0e0e0"}, "id": "wenuroute_graph.html:0:wenuroute_graph.html", "label": "wenuroute_graph.html", "shape": "square", "size": 18, "title": "\u003cb\u003ewenuroute_graph.html\u003c/b\u003e\u003cbr\u003e\nkind: module\u003cbr\u003e\nfile: wenuroute_graph.html\u003cbr\u003e\nline: \u2014\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#607D8B", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:0:tests/test_parsers.py", "label": "tests/test_parsers.py", "shape": "square", "size": 18, "title": "\u003cb\u003etests/test_parsers.py\u003c/b\u003e\u003cbr\u003e\nkind: module\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: \u2014\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:17:TestRouteGraph", "label": "TestRouteGraph", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eTestRouteGraph\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 17\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:18:test_add_node", "label": "test_add_node", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_add_node\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 18\u003cbr\u003e\nparams: self\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:24:test_add_edge_no_duplicates", "label": "test_add_edge_no_duplicates", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_add_edge_no_duplicates\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 24\u003cbr\u003e\nparams: self\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:31:test_merge", "label": "test_merge", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_merge\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 31\u003cbr\u003e\nparams: self\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:46:TestHtmlParser", "label": "TestHtmlParser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eTestHtmlParser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 46\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:47:_parser", "label": "_parser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_parser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 47\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:51:test_detects_button", "label": "test_detects_button", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_button\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 51\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:61:test_detects_form_endpoint", "label": "test_detects_form_endpoint", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_form_endpoint\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 61\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:71:test_detects_stylesheet", "label": "test_detects_stylesheet", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_stylesheet\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 71\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:81:test_detects_event_handler_function", "label": "test_detects_event_handler_function", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_event_handler_function\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 81\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:96:TestReactParser", "label": "TestReactParser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eTestReactParser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 96\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:97:_parser", "label": "_parser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_parser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 97\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:101:test_detects_function", "label": "test_detects_function", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_function\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 101\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:112:test_detects_fetch_endpoint", "label": "test_detects_fetch_endpoint", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_fetch_endpoint\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 112\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:120:test_detects_axios_endpoint", "label": "test_detects_axios_endpoint", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_axios_endpoint\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 120\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:128:test_detects_jsx_event", "label": "test_detects_jsx_event", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_jsx_event\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 128\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:141:TestPythonParser", "label": "TestPythonParser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eTestPythonParser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 141\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:142:_parser", "label": "_parser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_parser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 142\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:146:test_detects_function", "label": "test_detects_function", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_function\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 146\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:156:test_detects_flask_route", "label": "test_detects_flask_route", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_flask_route\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 156\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:173:test_detects_fastapi_route", "label": "test_detects_fastapi_route", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_fastapi_route\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 173\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:190:test_detects_sql_raw", "label": "test_detects_sql_raw", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_sql_raw\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 190\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:205:TestNodejsParser", "label": "TestNodejsParser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eTestNodejsParser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 205\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:206:_parser", "label": "_parser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_parser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 206\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:210:test_detects_express_route", "label": "test_detects_express_route", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_express_route\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 210\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:223:TestFlutterParser", "label": "TestFlutterParser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eTestFlutterParser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 223\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:224:_parser", "label": "_parser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_parser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 224\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:228:test_detects_widget", "label": "test_detects_widget", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_widget\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 228\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:249:test_detects_http_call", "label": "test_detects_http_call", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_http_call\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 249\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:262:TestAndroidParser", "label": "TestAndroidParser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eTestAndroidParser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 262\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:263:_parser", "label": "_parser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_parser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 263\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:267:test_detects_activity", "label": "test_detects_activity", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_activity\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 267\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:283:test_detects_retrofit_route", "label": "test_detects_retrofit_route", "shape": "ellipse", "size": 12, "title": "\u003cb\u003etest_detects_retrofit_route\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 283\u003cbr\u003e\nparams: self, tmp_path\n"}, {"color": "#FF9800", "font": {"color": "#e0e0e0"}, "id": "endpoint:GET:/users", "label": "GET /users", "shape": "diamond", "size": 12, "title": "\u003cb\u003eGET /users\u003c/b\u003e\u003cbr\u003e\nkind: endpoint\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 163\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#FF9800", "font": {"color": "#e0e0e0"}, "id": "endpoint:POST:/users", "label": "POST /users", "shape": "diamond", "size": 12, "title": "\u003cb\u003ePOST /users\u003c/b\u003e\u003cbr\u003e\nkind: endpoint\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 163\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#FF9800", "font": {"color": "#e0e0e0"}, "id": "endpoint:GET:/items/{item_id}", "label": "GET /items/{item_id}", "shape": "diamond", "size": 12, "title": "\u003cb\u003eGET /items/{item_id}\u003c/b\u003e\u003cbr\u003e\nkind: endpoint\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 180\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#F44336", "font": {"color": "#e0e0e0"}, "id": "tests/test_parsers.py:193:SQL:SELECT * FROM users ", "label": "SELECT * FROM users WHERE id = %s", "shape": "database", "size": 12, "title": "\u003cb\u003eSELECT * FROM users WHERE id = %s\u003c/b\u003e\u003cbr\u003e\nkind: sql\u003cbr\u003e\nfile: tests/test_parsers.py\u003cbr\u003e\nline: 193\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#607D8B", "font": {"color": "#e0e0e0"}, "id": "tests/__init__.py:0:tests/__init__.py", "label": "tests/__init__.py", "shape": "square", "size": 18, "title": "\u003cb\u003etests/__init__.py\u003c/b\u003e\u003cbr\u003e\nkind: module\u003cbr\u003e\nfile: tests/__init__.py\u003cbr\u003e\nline: \u2014\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#607D8B", "font": {"color": "#e0e0e0"}, "id": "wenuroute/analyzer.py:0:wenuroute/analyzer.py", "label": "wenuroute/analyzer.py", "shape": "square", "size": 18, "title": "\u003cb\u003ewenuroute/analyzer.py\u003c/b\u003e\u003cbr\u003e\nkind: module\u003cbr\u003e\nfile: wenuroute/analyzer.py\u003cbr\u003e\nline: \u2014\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/analyzer.py:12:Analyzer", "label": "Analyzer", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eAnalyzer\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/analyzer.py\u003cbr\u003e\nline: 12\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/analyzer.py:25:__init__", "label": "__init__", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e__init__\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/analyzer.py\u003cbr\u003e\nline: 25\u003cbr\u003e\nparams: self, project_root, progress_callback\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/analyzer.py:47:analyze", "label": "analyze", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eanalyze\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/analyzer.py\u003cbr\u003e\nline: 47\u003cbr\u003e\nparams: self\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/analyzer.py:64:_collect_files", "label": "_collect_files", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_collect_files\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/analyzer.py\u003cbr\u003e\nline: 64\u003cbr\u003e\nparams: self\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/analyzer.py:77:_parsers_for", "label": "_parsers_for", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_parsers_for\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/analyzer.py\u003cbr\u003e\nline: 77\u003cbr\u003e\nparams: self, path\n"}, {"color": "#F44336", "font": {"color": "#e0e0e0"}, "id": "wenuroute/analyzer.py:79:ORM:get", "label": "ORM.get()", "shape": "database", "size": 12, "title": "\u003cb\u003eORM.get()\u003c/b\u003e\u003cbr\u003e\nkind: sql\u003cbr\u003e\nfile: wenuroute/analyzer.py\u003cbr\u003e\nline: 79\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#607D8B", "font": {"color": "#e0e0e0"}, "id": "wenuroute/cli.py:0:wenuroute/cli.py", "label": "wenuroute/cli.py", "shape": "square", "size": 18, "title": "\u003cb\u003ewenuroute/cli.py\u003c/b\u003e\u003cbr\u003e\nkind: module\u003cbr\u003e\nfile: wenuroute/cli.py\u003cbr\u003e\nline: \u2014\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/cli.py:47:main", "label": "main", "shape": "ellipse", "size": 12, "title": "\u003cb\u003emain\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/cli.py\u003cbr\u003e\nline: 47\u003cbr\u003e\nparams: project, output, fmt, verbose\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/cli.py:71:_progress", "label": "_progress", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_progress\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/cli.py\u003cbr\u003e\nline: 71\u003cbr\u003e\nparams: msg\n"}, {"color": "#607D8B", "font": {"color": "#e0e0e0"}, "id": "wenuroute/graph.py:0:wenuroute/graph.py", "label": "wenuroute/graph.py", "shape": "square", "size": 18, "title": "\u003cb\u003ewenuroute/graph.py\u003c/b\u003e\u003cbr\u003e\nkind: module\u003cbr\u003e\nfile: wenuroute/graph.py\u003cbr\u003e\nline: \u2014\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/graph.py:77:_detect_layer", "label": "_detect_layer", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_detect_layer\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/graph.py\u003cbr\u003e\nline: 77\u003cbr\u003e\nparams: file_path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/graph.py:769:_build_sidebar_html", "label": "_build_sidebar_html", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_build_sidebar_html\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/graph.py\u003cbr\u003e\nline: 769\u003cbr\u003e\nparams: node_meta, colour_by_kind\n"}, {"color": "#F44336", "font": {"color": "#e0e0e0"}, "id": "wenuroute/graph.py:779:ORM:get", "label": "ORM.get()", "shape": "database", "size": 12, "title": "\u003cb\u003eORM.get()\u003c/b\u003e\u003cbr\u003e\nkind: sql\u003cbr\u003e\nfile: wenuroute/graph.py\u003cbr\u003e\nline: 779\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#F44336", "font": {"color": "#e0e0e0"}, "id": "wenuroute/graph.py:780:ORM:get", "label": "ORM.get()", "shape": "database", "size": 12, "title": "\u003cb\u003eORM.get()\u003c/b\u003e\u003cbr\u003e\nkind: sql\u003cbr\u003e\nfile: wenuroute/graph.py\u003cbr\u003e\nline: 780\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#F44336", "font": {"color": "#e0e0e0"}, "id": "wenuroute/graph.py:786:ORM:get", "label": "ORM.get()", "shape": "database", "size": 12, "title": "\u003cb\u003eORM.get()\u003c/b\u003e\u003cbr\u003e\nkind: sql\u003cbr\u003e\nfile: wenuroute/graph.py\u003cbr\u003e\nline: 786\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/graph.py:825:_inject_enhancements", "label": "_inject_enhancements", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_inject_enhancements\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/graph.py\u003cbr\u003e\nline: 825\u003cbr\u003e\nparams: html, node_meta, colour_by_kind\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/graph.py:850:render_html", "label": "render_html", "shape": "ellipse", "size": 12, "title": "\u003cb\u003erender_html\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/graph.py\u003cbr\u003e\nline: 850\u003cbr\u003e\nparams: graph, output\n"}, {"color": "#F44336", "font": {"color": "#e0e0e0"}, "id": "wenuroute/graph.py:896:ORM:get", "label": "ORM.get()", "shape": "database", "size": 12, "title": "\u003cb\u003eORM.get()\u003c/b\u003e\u003cbr\u003e\nkind: sql\u003cbr\u003e\nfile: wenuroute/graph.py\u003cbr\u003e\nline: 896\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#F44336", "font": {"color": "#e0e0e0"}, "id": "wenuroute/graph.py:897:ORM:get", "label": "ORM.get()", "shape": "database", "size": 12, "title": "\u003cb\u003eORM.get()\u003c/b\u003e\u003cbr\u003e\nkind: sql\u003cbr\u003e\nfile: wenuroute/graph.py\u003cbr\u003e\nline: 897\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/graph.py:938:render_console", "label": "render_console", "shape": "ellipse", "size": 12, "title": "\u003cb\u003erender_console\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/graph.py\u003cbr\u003e\nline: 938\u003cbr\u003e\nparams: graph\n"}, {"color": "#F44336", "font": {"color": "#e0e0e0"}, "id": "wenuroute/graph.py:959:ORM:get", "label": "ORM.get()", "shape": "database", "size": 12, "title": "\u003cb\u003eORM.get()\u003c/b\u003e\u003cbr\u003e\nkind: sql\u003cbr\u003e\nfile: wenuroute/graph.py\u003cbr\u003e\nline: 959\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#607D8B", "font": {"color": "#e0e0e0"}, "id": "wenuroute/models.py:0:wenuroute/models.py", "label": "wenuroute/models.py", "shape": "square", "size": 18, "title": "\u003cb\u003ewenuroute/models.py\u003c/b\u003e\u003cbr\u003e\nkind: module\u003cbr\u003e\nfile: wenuroute/models.py\u003cbr\u003e\nline: \u2014\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/models.py:10:NodeKind", "label": "NodeKind", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eNodeKind\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/models.py\u003cbr\u003e\nline: 10\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/models.py:24:RouteNode", "label": "RouteNode", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eRouteNode\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/models.py\u003cbr\u003e\nline: 24\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/models.py:35:__hash__", "label": "__hash__", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e__hash__\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/models.py\u003cbr\u003e\nline: 35\u003cbr\u003e\nparams: self\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/models.py:38:__eq__", "label": "__eq__", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e__eq__\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/models.py\u003cbr\u003e\nline: 38\u003cbr\u003e\nparams: self, other\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/models.py:43:RouteEdge", "label": "RouteEdge", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eRouteEdge\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/models.py\u003cbr\u003e\nline: 43\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/models.py:50:__hash__", "label": "__hash__", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e__hash__\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/models.py\u003cbr\u003e\nline: 50\u003cbr\u003e\nparams: self\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/models.py:53:__eq__", "label": "__eq__", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e__eq__\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/models.py\u003cbr\u003e\nline: 53\u003cbr\u003e\nparams: self, other\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/models.py:63:RouteGraph", "label": "RouteGraph", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eRouteGraph\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/models.py\u003cbr\u003e\nline: 63\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/models.py:69:add_node", "label": "add_node", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eadd_node\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/models.py\u003cbr\u003e\nline: 69\u003cbr\u003e\nparams: self, node\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/models.py:72:add_edge", "label": "add_edge", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eadd_edge\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/models.py\u003cbr\u003e\nline: 72\u003cbr\u003e\nparams: self, edge\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/models.py:76:merge", "label": "merge", "shape": "ellipse", "size": 12, "title": "\u003cb\u003emerge\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/models.py\u003cbr\u003e\nline: 76\u003cbr\u003e\nparams: self, other\n"}, {"color": "#607D8B", "font": {"color": "#e0e0e0"}, "id": "wenuroute/__init__.py:0:wenuroute/__init__.py", "label": "wenuroute/__init__.py", "shape": "square", "size": 18, "title": "\u003cb\u003ewenuroute/__init__.py\u003c/b\u003e\u003cbr\u003e\nkind: module\u003cbr\u003e\nfile: wenuroute/__init__.py\u003cbr\u003e\nline: \u2014\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#607D8B", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/android.py:0:wenuroute/parsers/android.py", "label": "wenuroute/parsers/android.py", "shape": "square", "size": 18, "title": "\u003cb\u003ewenuroute/parsers/android.py\u003c/b\u003e\u003cbr\u003e\nkind: module\u003cbr\u003e\nfile: wenuroute/parsers/android.py\u003cbr\u003e\nline: \u2014\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/android.py:67:AndroidParser", "label": "AndroidParser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eAndroidParser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/android.py\u003cbr\u003e\nline: 67\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/android.py:72:parse", "label": "parse", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eparse\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/android.py\u003cbr\u003e\nline: 72\u003cbr\u003e\nparams: self, path\n"}, {"color": "#607D8B", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/base.py:0:wenuroute/parsers/base.py", "label": "wenuroute/parsers/base.py", "shape": "square", "size": 18, "title": "\u003cb\u003ewenuroute/parsers/base.py\u003c/b\u003e\u003cbr\u003e\nkind: module\u003cbr\u003e\nfile: wenuroute/parsers/base.py\u003cbr\u003e\nline: \u2014\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/base.py:11:BaseParser", "label": "BaseParser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eBaseParser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/base.py\u003cbr\u003e\nline: 11\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/base.py:17:__init__", "label": "__init__", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e__init__\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/base.py\u003cbr\u003e\nline: 17\u003cbr\u003e\nparams: self, project_root\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/base.py:24:can_parse", "label": "can_parse", "shape": "ellipse", "size": 12, "title": "\u003cb\u003ecan_parse\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/base.py\u003cbr\u003e\nline: 24\u003cbr\u003e\nparams: self, path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/base.py:29:parse", "label": "parse", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eparse\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/base.py\u003cbr\u003e\nline: 29\u003cbr\u003e\nparams: self, path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/base.py:36:_rel", "label": "_rel", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_rel\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/base.py\u003cbr\u003e\nline: 36\u003cbr\u003e\nparams: self, path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/base.py:43:_node_id", "label": "_node_id", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_node_id\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/base.py\u003cbr\u003e\nline: 43\u003cbr\u003e\nparams: self, path, name, line\n"}, {"color": "#607D8B", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/flutter.py:0:wenuroute/parsers/flutter.py", "label": "wenuroute/parsers/flutter.py", "shape": "square", "size": 18, "title": "\u003cb\u003ewenuroute/parsers/flutter.py\u003c/b\u003e\u003cbr\u003e\nkind: module\u003cbr\u003e\nfile: wenuroute/parsers/flutter.py\u003cbr\u003e\nline: \u2014\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/flutter.py:45:FlutterParser", "label": "FlutterParser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eFlutterParser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/flutter.py\u003cbr\u003e\nline: 45\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/flutter.py:50:parse", "label": "parse", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eparse\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/flutter.py\u003cbr\u003e\nline: 50\u003cbr\u003e\nparams: self, path\n"}, {"color": "#607D8B", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/html.py:0:wenuroute/parsers/html.py", "label": "wenuroute/parsers/html.py", "shape": "square", "size": 18, "title": "\u003cb\u003ewenuroute/parsers/html.py\u003c/b\u003e\u003cbr\u003e\nkind: module\u003cbr\u003e\nfile: wenuroute/parsers/html.py\u003cbr\u003e\nline: \u2014\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/html.py:20:HtmlParser", "label": "HtmlParser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eHtmlParser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/html.py\u003cbr\u003e\nline: 20\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/html.py:25:parse", "label": "parse", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eparse\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/html.py\u003cbr\u003e\nline: 25\u003cbr\u003e\nparams: self, path\n"}, {"color": "#F44336", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/html.py:37:ORM:get", "label": "ORM.get()", "shape": "database", "size": 12, "title": "\u003cb\u003eORM.get()\u003c/b\u003e\u003cbr\u003e\nkind: sql\u003cbr\u003e\nfile: wenuroute/parsers/html.py\u003cbr\u003e\nline: 37\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#F44336", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/html.py:62:ORM:get", "label": "ORM.get()", "shape": "database", "size": 12, "title": "\u003cb\u003eORM.get()\u003c/b\u003e\u003cbr\u003e\nkind: sql\u003cbr\u003e\nfile: wenuroute/parsers/html.py\u003cbr\u003e\nline: 62\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/html.py:92:_process_element", "label": "_process_element", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_process_element\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/html.py\u003cbr\u003e\nline: 92\u003cbr\u003e\nparams: self, graph, path, rel, module_id, tag\n"}, {"color": "#F44336", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/html.py:101:ORM:get", "label": "ORM.get()", "shape": "database", "size": 12, "title": "\u003cb\u003eORM.get()\u003c/b\u003e\u003cbr\u003e\nkind: sql\u003cbr\u003e\nfile: wenuroute/parsers/html.py\u003cbr\u003e\nline: 101\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#F44336", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/html.py:143:ORM:get", "label": "ORM.get()", "shape": "database", "size": 12, "title": "\u003cb\u003eORM.get()\u003c/b\u003e\u003cbr\u003e\nkind: sql\u003cbr\u003e\nfile: wenuroute/parsers/html.py\u003cbr\u003e\nline: 143\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#F44336", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/html.py:153:ORM:get", "label": "ORM.get()", "shape": "database", "size": 12, "title": "\u003cb\u003eORM.get()\u003c/b\u003e\u003cbr\u003e\nkind: sql\u003cbr\u003e\nfile: wenuroute/parsers/html.py\u003cbr\u003e\nline: 153\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#F44336", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/html.py:154:ORM:get", "label": "ORM.get()", "shape": "database", "size": 12, "title": "\u003cb\u003eORM.get()\u003c/b\u003e\u003cbr\u003e\nkind: sql\u003cbr\u003e\nfile: wenuroute/parsers/html.py\u003cbr\u003e\nline: 154\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#607D8B", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/nodejs.py:0:wenuroute/parsers/nodejs.py", "label": "wenuroute/parsers/nodejs.py", "shape": "square", "size": 18, "title": "\u003cb\u003ewenuroute/parsers/nodejs.py\u003c/b\u003e\u003cbr\u003e\nkind: module\u003cbr\u003e\nfile: wenuroute/parsers/nodejs.py\u003cbr\u003e\nline: \u2014\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/nodejs.py:44:NodejsParser", "label": "NodejsParser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eNodejsParser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/nodejs.py\u003cbr\u003e\nline: 44\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/nodejs.py:49:parse", "label": "parse", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eparse\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/nodejs.py\u003cbr\u003e\nline: 49\u003cbr\u003e\nparams: self, path\n"}, {"color": "#607D8B", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/python.py:0:wenuroute/parsers/python.py", "label": "wenuroute/parsers/python.py", "shape": "square", "size": 18, "title": "\u003cb\u003ewenuroute/parsers/python.py\u003c/b\u003e\u003cbr\u003e\nkind: module\u003cbr\u003e\nfile: wenuroute/parsers/python.py\u003cbr\u003e\nline: \u2014\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/python.py:41:PythonParser", "label": "PythonParser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003ePythonParser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/python.py\u003cbr\u003e\nline: 41\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/python.py:46:parse", "label": "parse", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eparse\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/python.py\u003cbr\u003e\nline: 46\u003cbr\u003e\nparams: self, path\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/python.py:137:_walk_ast", "label": "_walk_ast", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_walk_ast\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/python.py\u003cbr\u003e\nline: 137\u003cbr\u003e\nparams: self, graph, tree, path, rel, module_id\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/python.py:149:_params", "label": "_params", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_params\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/python.py\u003cbr\u003e\nline: 149\u003cbr\u003e\nparams: node\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/python.py:153:_visit", "label": "_visit", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_visit\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/python.py\u003cbr\u003e\nline: 153\u003cbr\u003e\nparams: node, parent_id\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/python.py:195:_handle_call", "label": "_handle_call", "shape": "ellipse", "size": 12, "title": "\u003cb\u003e_handle_call\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/python.py\u003cbr\u003e\nline: 195\u003cbr\u003e\nparams: node, parent_id\n"}, {"color": "#607D8B", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/react.py:0:wenuroute/parsers/react.py", "label": "wenuroute/parsers/react.py", "shape": "square", "size": 18, "title": "\u003cb\u003ewenuroute/parsers/react.py\u003c/b\u003e\u003cbr\u003e\nkind: module\u003cbr\u003e\nfile: wenuroute/parsers/react.py\u003cbr\u003e\nline: \u2014\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/react.py:56:ReactParser", "label": "ReactParser", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eReactParser\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/react.py\u003cbr\u003e\nline: 56\u003cbr\u003e\nparams: \u2014\n"}, {"color": "#2196F3", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/react.py:61:parse", "label": "parse", "shape": "ellipse", "size": 12, "title": "\u003cb\u003eparse\u003c/b\u003e\u003cbr\u003e\nkind: function\u003cbr\u003e\nfile: wenuroute/parsers/react.py\u003cbr\u003e\nline: 61\u003cbr\u003e\nparams: self, path\n"}, {"color": "#607D8B", "font": {"color": "#e0e0e0"}, "id": "wenuroute/parsers/__init__.py:0:wenuroute/parsers/__init__.py", "label": "wenuroute/parsers/__init__.py", "shape": "square", "size": 18, "title": "\u003cb\u003ewenuroute/parsers/__init__.py\u003c/b\u003e\u003cbr\u003e\nkind: module\u003cbr\u003e\nfile: wenuroute/parsers/__init__.py\u003cbr\u003e\nline: \u2014\u003cbr\u003e\nparams: \u2014\n"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "tests/test_parsers.py:0:tests/test_parsers.py", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:17:TestRouteGraph"}, {"arrows": "to", "from": "tests/test_parsers.py:17:TestRouteGraph", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:18:test_add_node"}, {"arrows": "to", "from": "tests/test_parsers.py:17:TestRouteGraph", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:24:test_add_edge_no_duplicates"}, {"arrows": "to", "from": "tests/test_parsers.py:17:TestRouteGraph", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:31:test_merge"}, {"arrows": "to", "from": "tests/test_parsers.py:0:tests/test_parsers.py", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:46:TestHtmlParser"}, {"arrows": "to", "from": "tests/test_parsers.py:46:TestHtmlParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:47:_parser"}, {"arrows": "to", "from": "tests/test_parsers.py:46:TestHtmlParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:51:test_detects_button"}, {"arrows": "to", "from": "tests/test_parsers.py:46:TestHtmlParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:61:test_detects_form_endpoint"}, {"arrows": "to", "from": "tests/test_parsers.py:46:TestHtmlParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:71:test_detects_stylesheet"}, {"arrows": "to", "from": "tests/test_parsers.py:46:TestHtmlParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:81:test_detects_event_handler_function"}, {"arrows": "to", "from": "tests/test_parsers.py:0:tests/test_parsers.py", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:96:TestReactParser"}, {"arrows": "to", "from": "tests/test_parsers.py:96:TestReactParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:97:_parser"}, {"arrows": "to", "from": "tests/test_parsers.py:96:TestReactParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:101:test_detects_function"}, {"arrows": "to", "from": "tests/test_parsers.py:96:TestReactParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:112:test_detects_fetch_endpoint"}, {"arrows": "to", "from": "tests/test_parsers.py:96:TestReactParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:120:test_detects_axios_endpoint"}, {"arrows": "to", "from": "tests/test_parsers.py:96:TestReactParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:128:test_detects_jsx_event"}, {"arrows": "to", "from": "tests/test_parsers.py:0:tests/test_parsers.py", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:141:TestPythonParser"}, {"arrows": "to", "from": "tests/test_parsers.py:141:TestPythonParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:142:_parser"}, {"arrows": "to", "from": "tests/test_parsers.py:141:TestPythonParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:146:test_detects_function"}, {"arrows": "to", "from": "tests/test_parsers.py:141:TestPythonParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:156:test_detects_flask_route"}, {"arrows": "to", "from": "tests/test_parsers.py:141:TestPythonParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:173:test_detects_fastapi_route"}, {"arrows": "to", "from": "tests/test_parsers.py:141:TestPythonParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:190:test_detects_sql_raw"}, {"arrows": "to", "from": "tests/test_parsers.py:0:tests/test_parsers.py", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:205:TestNodejsParser"}, {"arrows": "to", "from": "tests/test_parsers.py:205:TestNodejsParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:206:_parser"}, {"arrows": "to", "from": "tests/test_parsers.py:205:TestNodejsParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:210:test_detects_express_route"}, {"arrows": "to", "from": "tests/test_parsers.py:0:tests/test_parsers.py", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:223:TestFlutterParser"}, {"arrows": "to", "from": "tests/test_parsers.py:223:TestFlutterParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:224:_parser"}, {"arrows": "to", "from": "tests/test_parsers.py:223:TestFlutterParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:228:test_detects_widget"}, {"arrows": "to", "from": "tests/test_parsers.py:223:TestFlutterParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:249:test_detects_http_call"}, {"arrows": "to", "from": "tests/test_parsers.py:0:tests/test_parsers.py", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:262:TestAndroidParser"}, {"arrows": "to", "from": "tests/test_parsers.py:262:TestAndroidParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:263:_parser"}, {"arrows": "to", "from": "tests/test_parsers.py:262:TestAndroidParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:267:test_detects_activity"}, {"arrows": "to", "from": "tests/test_parsers.py:262:TestAndroidParser", "label": "defines", "title": "defines", "to": "tests/test_parsers.py:283:test_detects_retrofit_route"}, {"arrows": "to", "from": "tests/test_parsers.py:0:tests/test_parsers.py", "label": "defines", "title": "defines", "to": "endpoint:GET:/users"}, {"arrows": "to", "from": "tests/test_parsers.py:0:tests/test_parsers.py", "label": "defines", "title": "defines", "to": "endpoint:POST:/users"}, {"arrows": "to", "from": "tests/test_parsers.py:0:tests/test_parsers.py", "label": "defines", "title": "defines", "to": "endpoint:GET:/items/{item_id}"}, {"arrows": "to", "from": "tests/test_parsers.py:0:tests/test_parsers.py", "label": "executes", "title": "executes", "to": "tests/test_parsers.py:193:SQL:SELECT * FROM users "}, {"arrows": "to", "from": "wenuroute/analyzer.py:0:wenuroute/analyzer.py", "label": "defines", "title": "defines", "to": "wenuroute/analyzer.py:12:Analyzer"}, {"arrows": "to", "from": "wenuroute/analyzer.py:12:Analyzer", "label": "defines", "title": "defines", "to": "wenuroute/analyzer.py:25:__init__"}, {"arrows": "to", "from": "wenuroute/analyzer.py:12:Analyzer", "label": "defines", "title": "defines", "to": "wenuroute/analyzer.py:47:analyze"}, {"arrows": "to", "from": "wenuroute/analyzer.py:12:Analyzer", "label": "defines", "title": "defines", "to": "wenuroute/analyzer.py:64:_collect_files"}, {"arrows": "to", "from": "wenuroute/analyzer.py:12:Analyzer", "label": "defines", "title": "defines", "to": "wenuroute/analyzer.py:77:_parsers_for"}, {"arrows": "to", "from": "wenuroute/analyzer.py:77:_parsers_for", "label": "executes", "title": "executes", "to": "wenuroute/analyzer.py:79:ORM:get"}, {"arrows": "to", "from": "wenuroute/cli.py:0:wenuroute/cli.py", "label": "defines", "title": "defines", "to": "wenuroute/cli.py:47:main"}, {"arrows": "to", "from": "wenuroute/cli.py:47:main", "label": "defines", "title": "defines", "to": "wenuroute/cli.py:71:_progress"}, {"arrows": "to", "from": "wenuroute/graph.py:0:wenuroute/graph.py", "label": "defines", "title": "defines", "to": "wenuroute/graph.py:77:_detect_layer"}, {"arrows": "to", "from": "wenuroute/graph.py:0:wenuroute/graph.py", "label": "defines", "title": "defines", "to": "wenuroute/graph.py:769:_build_sidebar_html"}, {"arrows": "to", "from": "wenuroute/graph.py:769:_build_sidebar_html", "label": "executes", "title": "executes", "to": "wenuroute/graph.py:779:ORM:get"}, {"arrows": "to", "from": "wenuroute/graph.py:769:_build_sidebar_html", "label": "executes", "title": "executes", "to": "wenuroute/graph.py:780:ORM:get"}, {"arrows": "to", "from": "wenuroute/graph.py:769:_build_sidebar_html", "label": "executes", "title": "executes", "to": "wenuroute/graph.py:786:ORM:get"}, {"arrows": "to", "from": "wenuroute/graph.py:0:wenuroute/graph.py", "label": "defines", "title": "defines", "to": "wenuroute/graph.py:825:_inject_enhancements"}, {"arrows": "to", "from": "wenuroute/graph.py:0:wenuroute/graph.py", "label": "defines", "title": "defines", "to": "wenuroute/graph.py:850:render_html"}, {"arrows": "to", "from": "wenuroute/graph.py:850:render_html", "label": "executes", "title": "executes", "to": "wenuroute/graph.py:896:ORM:get"}, {"arrows": "to", "from": "wenuroute/graph.py:850:render_html", "label": "executes", "title": "executes", "to": "wenuroute/graph.py:897:ORM:get"}, {"arrows": "to", "from": "wenuroute/graph.py:0:wenuroute/graph.py", "label": "defines", "title": "defines", "to": "wenuroute/graph.py:938:render_console"}, {"arrows": "to", "from": "wenuroute/graph.py:938:render_console", "label": "executes", "title": "executes", "to": "wenuroute/graph.py:959:ORM:get"}, {"arrows": "to", "from": "wenuroute/models.py:0:wenuroute/models.py", "label": "defines", "title": "defines", "to": "wenuroute/models.py:10:NodeKind"}, {"arrows": "to", "from": "wenuroute/models.py:0:wenuroute/models.py", "label": "defines", "title": "defines", "to": "wenuroute/models.py:24:RouteNode"}, {"arrows": "to", "from": "wenuroute/models.py:24:RouteNode", "label": "defines", "title": "defines", "to": "wenuroute/models.py:35:__hash__"}, {"arrows": "to", "from": "wenuroute/models.py:24:RouteNode", "label": "defines", "title": "defines", "to": "wenuroute/models.py:38:__eq__"}, {"arrows": "to", "from": "wenuroute/models.py:0:wenuroute/models.py", "label": "defines", "title": "defines", "to": "wenuroute/models.py:43:RouteEdge"}, {"arrows": "to", "from": "wenuroute/models.py:43:RouteEdge", "label": "defines", "title": "defines", "to": "wenuroute/models.py:50:__hash__"}, {"arrows": "to", "from": "wenuroute/models.py:43:RouteEdge", "label": "defines", "title": "defines", "to": "wenuroute/models.py:53:__eq__"}, {"arrows": "to", "from": "wenuroute/models.py:0:wenuroute/models.py", "label": "defines", "title": "defines", "to": "wenuroute/models.py:63:RouteGraph"}, {"arrows": "to", "from": "wenuroute/models.py:63:RouteGraph", "label": "defines", "title": "defines", "to": "wenuroute/models.py:69:add_node"}, {"arrows": "to", "from": "wenuroute/models.py:63:RouteGraph", "label": "defines", "title": "defines", "to": "wenuroute/models.py:72:add_edge"}, {"arrows": "to", "from": "wenuroute/models.py:63:RouteGraph", "label": "defines", "title": "defines", "to": "wenuroute/models.py:76:merge"}, {"arrows": "to", "from": "wenuroute/parsers/android.py:0:wenuroute/parsers/android.py", "label": "defines", "title": "defines", "to": "wenuroute/parsers/android.py:67:AndroidParser"}, {"arrows": "to", "from": "wenuroute/parsers/android.py:67:AndroidParser", "label": "defines", "title": "defines", "to": "wenuroute/parsers/android.py:72:parse"}, {"arrows": "to", "from": "wenuroute/parsers/base.py:0:wenuroute/parsers/base.py", "label": "defines", "title": "defines", "to": "wenuroute/parsers/base.py:11:BaseParser"}, {"arrows": "to", "from": "wenuroute/parsers/base.py:11:BaseParser", "label": "defines", "title": "defines", "to": "wenuroute/parsers/base.py:17:__init__"}, {"arrows": "to", "from": "wenuroute/parsers/base.py:11:BaseParser", "label": "defines", "title": "defines", "to": "wenuroute/parsers/base.py:24:can_parse"}, {"arrows": "to", "from": "wenuroute/parsers/base.py:11:BaseParser", "label": "defines", "title": "defines", "to": "wenuroute/parsers/base.py:29:parse"}, {"arrows": "to", "from": "wenuroute/parsers/base.py:11:BaseParser", "label": "defines", "title": "defines", "to": "wenuroute/parsers/base.py:36:_rel"}, {"arrows": "to", "from": "wenuroute/parsers/base.py:11:BaseParser", "label": "defines", "title": "defines", "to": "wenuroute/parsers/base.py:43:_node_id"}, {"arrows": "to", "from": "wenuroute/parsers/flutter.py:0:wenuroute/parsers/flutter.py", "label": "defines", "title": "defines", "to": "wenuroute/parsers/flutter.py:45:FlutterParser"}, {"arrows": "to", "from": "wenuroute/parsers/flutter.py:45:FlutterParser", "label": "defines", "title": "defines", "to": "wenuroute/parsers/flutter.py:50:parse"}, {"arrows": "to", "from": "wenuroute/parsers/html.py:0:wenuroute/parsers/html.py", "label": "defines", "title": "defines", "to": "wenuroute/parsers/html.py:20:HtmlParser"}, {"arrows": "to", "from": "wenuroute/parsers/html.py:20:HtmlParser", "label": "defines", "title": "defines", "to": "wenuroute/parsers/html.py:25:parse"}, {"arrows": "to", "from": "wenuroute/parsers/html.py:25:parse", "label": "executes", "title": "executes", "to": "wenuroute/parsers/html.py:37:ORM:get"}, {"arrows": "to", "from": "wenuroute/parsers/html.py:25:parse", "label": "executes", "title": "executes", "to": "wenuroute/parsers/html.py:62:ORM:get"}, {"arrows": "to", "from": "wenuroute/parsers/html.py:20:HtmlParser", "label": "defines", "title": "defines", "to": "wenuroute/parsers/html.py:92:_process_element"}, {"arrows": "to", "from": "wenuroute/parsers/html.py:92:_process_element", "label": "executes", "title": "executes", "to": "wenuroute/parsers/html.py:101:ORM:get"}, {"arrows": "to", "from": "wenuroute/parsers/html.py:92:_process_element", "label": "executes", "title": "executes", "to": "wenuroute/parsers/html.py:143:ORM:get"}, {"arrows": "to", "from": "wenuroute/parsers/html.py:92:_process_element", "label": "executes", "title": "executes", "to": "wenuroute/parsers/html.py:153:ORM:get"}, {"arrows": "to", "from": "wenuroute/parsers/html.py:92:_process_element", "label": "executes", "title": "executes", "to": "wenuroute/parsers/html.py:154:ORM:get"}, {"arrows": "to", "from": "wenuroute/parsers/nodejs.py:0:wenuroute/parsers/nodejs.py", "label": "defines", "title": "defines", "to": "wenuroute/parsers/nodejs.py:44:NodejsParser"}, {"arrows": "to", "from": "wenuroute/parsers/nodejs.py:44:NodejsParser", "label": "defines", "title": "defines", "to": "wenuroute/parsers/nodejs.py:49:parse"}, {"arrows": "to", "from": "wenuroute/parsers/python.py:0:wenuroute/parsers/python.py", "label": "defines", "title": "defines", "to": "wenuroute/parsers/python.py:41:PythonParser"}, {"arrows": "to", "from": "wenuroute/parsers/python.py:41:PythonParser", "label": "defines", "title": "defines", "to": "wenuroute/parsers/python.py:46:parse"}, {"arrows": "to", "from": "wenuroute/parsers/python.py:41:PythonParser", "label": "defines", "title": "defines", "to": "wenuroute/parsers/python.py:137:_walk_ast"}, {"arrows": "to", "from": "wenuroute/parsers/python.py:137:_walk_ast", "label": "defines", "title": "defines", "to": "wenuroute/parsers/python.py:149:_params"}, {"arrows": "to", "from": "wenuroute/parsers/python.py:137:_walk_ast", "label": "defines", "title": "defines", "to": "wenuroute/parsers/python.py:153:_visit"}, {"arrows": "to", "from": "wenuroute/parsers/python.py:137:_walk_ast", "label": "defines", "title": "defines", "to": "wenuroute/parsers/python.py:195:_handle_call"}, {"arrows": "to", "from": "wenuroute/parsers/react.py:0:wenuroute/parsers/react.py", "label": "defines", "title": "defines", "to": "wenuroute/parsers/react.py:56:ReactParser"}, {"arrows": "to", "from": "wenuroute/parsers/react.py:56:ReactParser", "label": "defines", "title": "defines", "to": "wenuroute/parsers/react.py:61:parse"}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"physics": {"enabled": true, "solver": "forceAtlas2Based", "forceAtlas2Based": {"gravitationalConstant": -80, "centralGravity": 0.01, "springLength": 120, "springConstant": 0.08}, "stabilization": {"iterations": 150}}, "interaction": {"hover": true, "navigationButtons": true, "tooltipDelay": 100}, "edges": {"arrows": {"to": {"enabled": true, "scaleFactor": 0.6}}, "color": {"color": "#555577", "highlight": "#aaaaff"}, "font": {"size": 9, "color": "#888888"}, "smooth": {"type": "dynamic"}}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+                      network.on("stabilizationProgress", function(params) {
+                          document.getElementById('loadingBar').removeAttribute("style");
+                          var maxWidth = 496;
+                          var minWidth = 20;
+                          var widthFactor = params.iterations/params.total;
+                          var width = Math.max(minWidth,maxWidth * widthFactor);
+                          document.getElementById('bar').style.width = width + 'px';
+                          document.getElementById('text').innerHTML = Math.round(widthFactor*100) + '%';
+                      });
+                      network.once("stabilizationIterationsDone", function() {
+                          document.getElementById('text').innerHTML = '100%';
+                          document.getElementById('bar').style.width = '496px';
+                          document.getElementById('loadingBar').style.opacity = 0;
+                          // really clean the dom element
+                          setTimeout(function () {document.getElementById('loadingBar').style.display = 'none';}, 500);
+                      });
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    <script id="wr-script">
+(function() {
+  var META = {"wenuroute_graph.html:0:wenuroute_graph.html": {"kind": "module", "layer": "frontend", "label": "wenuroute_graph.html", "file": "wenuroute_graph.html", "line": 0, "params": []}, "tests/test_parsers.py:0:tests/test_parsers.py": {"kind": "module", "layer": "backend", "label": "tests/test_parsers.py", "file": "tests/test_parsers.py", "line": 0, "params": []}, "tests/test_parsers.py:17:TestRouteGraph": {"kind": "function", "layer": "backend", "label": "TestRouteGraph", "file": "tests/test_parsers.py", "line": 17, "params": []}, "tests/test_parsers.py:18:test_add_node": {"kind": "function", "layer": "backend", "label": "test_add_node", "file": "tests/test_parsers.py", "line": 18, "params": ["self"]}, "tests/test_parsers.py:24:test_add_edge_no_duplicates": {"kind": "function", "layer": "backend", "label": "test_add_edge_no_duplicates", "file": "tests/test_parsers.py", "line": 24, "params": ["self"]}, "tests/test_parsers.py:31:test_merge": {"kind": "function", "layer": "backend", "label": "test_merge", "file": "tests/test_parsers.py", "line": 31, "params": ["self"]}, "tests/test_parsers.py:46:TestHtmlParser": {"kind": "function", "layer": "backend", "label": "TestHtmlParser", "file": "tests/test_parsers.py", "line": 46, "params": []}, "tests/test_parsers.py:47:_parser": {"kind": "function", "layer": "backend", "label": "_parser", "file": "tests/test_parsers.py", "line": 47, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:51:test_detects_button": {"kind": "function", "layer": "backend", "label": "test_detects_button", "file": "tests/test_parsers.py", "line": 51, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:61:test_detects_form_endpoint": {"kind": "function", "layer": "backend", "label": "test_detects_form_endpoint", "file": "tests/test_parsers.py", "line": 61, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:71:test_detects_stylesheet": {"kind": "function", "layer": "backend", "label": "test_detects_stylesheet", "file": "tests/test_parsers.py", "line": 71, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:81:test_detects_event_handler_function": {"kind": "function", "layer": "backend", "label": "test_detects_event_handler_function", "file": "tests/test_parsers.py", "line": 81, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:96:TestReactParser": {"kind": "function", "layer": "backend", "label": "TestReactParser", "file": "tests/test_parsers.py", "line": 96, "params": []}, "tests/test_parsers.py:97:_parser": {"kind": "function", "layer": "backend", "label": "_parser", "file": "tests/test_parsers.py", "line": 97, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:101:test_detects_function": {"kind": "function", "layer": "backend", "label": "test_detects_function", "file": "tests/test_parsers.py", "line": 101, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:112:test_detects_fetch_endpoint": {"kind": "function", "layer": "backend", "label": "test_detects_fetch_endpoint", "file": "tests/test_parsers.py", "line": 112, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:120:test_detects_axios_endpoint": {"kind": "function", "layer": "backend", "label": "test_detects_axios_endpoint", "file": "tests/test_parsers.py", "line": 120, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:128:test_detects_jsx_event": {"kind": "function", "layer": "backend", "label": "test_detects_jsx_event", "file": "tests/test_parsers.py", "line": 128, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:141:TestPythonParser": {"kind": "function", "layer": "backend", "label": "TestPythonParser", "file": "tests/test_parsers.py", "line": 141, "params": []}, "tests/test_parsers.py:142:_parser": {"kind": "function", "layer": "backend", "label": "_parser", "file": "tests/test_parsers.py", "line": 142, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:146:test_detects_function": {"kind": "function", "layer": "backend", "label": "test_detects_function", "file": "tests/test_parsers.py", "line": 146, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:156:test_detects_flask_route": {"kind": "function", "layer": "backend", "label": "test_detects_flask_route", "file": "tests/test_parsers.py", "line": 156, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:173:test_detects_fastapi_route": {"kind": "function", "layer": "backend", "label": "test_detects_fastapi_route", "file": "tests/test_parsers.py", "line": 173, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:190:test_detects_sql_raw": {"kind": "function", "layer": "backend", "label": "test_detects_sql_raw", "file": "tests/test_parsers.py", "line": 190, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:205:TestNodejsParser": {"kind": "function", "layer": "backend", "label": "TestNodejsParser", "file": "tests/test_parsers.py", "line": 205, "params": []}, "tests/test_parsers.py:206:_parser": {"kind": "function", "layer": "backend", "label": "_parser", "file": "tests/test_parsers.py", "line": 206, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:210:test_detects_express_route": {"kind": "function", "layer": "backend", "label": "test_detects_express_route", "file": "tests/test_parsers.py", "line": 210, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:223:TestFlutterParser": {"kind": "function", "layer": "backend", "label": "TestFlutterParser", "file": "tests/test_parsers.py", "line": 223, "params": []}, "tests/test_parsers.py:224:_parser": {"kind": "function", "layer": "backend", "label": "_parser", "file": "tests/test_parsers.py", "line": 224, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:228:test_detects_widget": {"kind": "function", "layer": "backend", "label": "test_detects_widget", "file": "tests/test_parsers.py", "line": 228, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:249:test_detects_http_call": {"kind": "function", "layer": "backend", "label": "test_detects_http_call", "file": "tests/test_parsers.py", "line": 249, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:262:TestAndroidParser": {"kind": "function", "layer": "backend", "label": "TestAndroidParser", "file": "tests/test_parsers.py", "line": 262, "params": []}, "tests/test_parsers.py:263:_parser": {"kind": "function", "layer": "backend", "label": "_parser", "file": "tests/test_parsers.py", "line": 263, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:267:test_detects_activity": {"kind": "function", "layer": "backend", "label": "test_detects_activity", "file": "tests/test_parsers.py", "line": 267, "params": ["self", "tmp_path"]}, "tests/test_parsers.py:283:test_detects_retrofit_route": {"kind": "function", "layer": "backend", "label": "test_detects_retrofit_route", "file": "tests/test_parsers.py", "line": 283, "params": ["self", "tmp_path"]}, "endpoint:GET:/users": {"kind": "endpoint", "layer": "backend", "label": "GET /users", "file": "tests/test_parsers.py", "line": 163, "params": []}, "endpoint:POST:/users": {"kind": "endpoint", "layer": "backend", "label": "POST /users", "file": "tests/test_parsers.py", "line": 163, "params": []}, "endpoint:GET:/items/{item_id}": {"kind": "endpoint", "layer": "backend", "label": "GET /items/{item_id}", "file": "tests/test_parsers.py", "line": 180, "params": []}, "tests/test_parsers.py:193:SQL:SELECT * FROM users ": {"kind": "sql", "layer": "backend", "label": "SELECT * FROM users WHERE id = %s", "file": "tests/test_parsers.py", "line": 193, "params": []}, "tests/__init__.py:0:tests/__init__.py": {"kind": "module", "layer": "backend", "label": "tests/__init__.py", "file": "tests/__init__.py", "line": 0, "params": []}, "wenuroute/analyzer.py:0:wenuroute/analyzer.py": {"kind": "module", "layer": "backend", "label": "wenuroute/analyzer.py", "file": "wenuroute/analyzer.py", "line": 0, "params": []}, "wenuroute/analyzer.py:12:Analyzer": {"kind": "function", "layer": "backend", "label": "Analyzer", "file": "wenuroute/analyzer.py", "line": 12, "params": []}, "wenuroute/analyzer.py:25:__init__": {"kind": "function", "layer": "backend", "label": "__init__", "file": "wenuroute/analyzer.py", "line": 25, "params": ["self", "project_root", "progress_callback"]}, "wenuroute/analyzer.py:47:analyze": {"kind": "function", "layer": "backend", "label": "analyze", "file": "wenuroute/analyzer.py", "line": 47, "params": ["self"]}, "wenuroute/analyzer.py:64:_collect_files": {"kind": "function", "layer": "backend", "label": "_collect_files", "file": "wenuroute/analyzer.py", "line": 64, "params": ["self"]}, "wenuroute/analyzer.py:77:_parsers_for": {"kind": "function", "layer": "backend", "label": "_parsers_for", "file": "wenuroute/analyzer.py", "line": 77, "params": ["self", "path"]}, "wenuroute/analyzer.py:79:ORM:get": {"kind": "sql", "layer": "backend", "label": "ORM.get()", "file": "wenuroute/analyzer.py", "line": 79, "params": []}, "wenuroute/cli.py:0:wenuroute/cli.py": {"kind": "module", "layer": "backend", "label": "wenuroute/cli.py", "file": "wenuroute/cli.py", "line": 0, "params": []}, "wenuroute/cli.py:47:main": {"kind": "function", "layer": "backend", "label": "main", "file": "wenuroute/cli.py", "line": 47, "params": ["project", "output", "fmt", "verbose"]}, "wenuroute/cli.py:71:_progress": {"kind": "function", "layer": "backend", "label": "_progress", "file": "wenuroute/cli.py", "line": 71, "params": ["msg"]}, "wenuroute/graph.py:0:wenuroute/graph.py": {"kind": "module", "layer": "backend", "label": "wenuroute/graph.py", "file": "wenuroute/graph.py", "line": 0, "params": []}, "wenuroute/graph.py:77:_detect_layer": {"kind": "function", "layer": "backend", "label": "_detect_layer", "file": "wenuroute/graph.py", "line": 77, "params": ["file_path"]}, "wenuroute/graph.py:769:_build_sidebar_html": {"kind": "function", "layer": "backend", "label": "_build_sidebar_html", "file": "wenuroute/graph.py", "line": 769, "params": ["node_meta", "colour_by_kind"]}, "wenuroute/graph.py:779:ORM:get": {"kind": "sql", "layer": "backend", "label": "ORM.get()", "file": "wenuroute/graph.py", "line": 779, "params": []}, "wenuroute/graph.py:780:ORM:get": {"kind": "sql", "layer": "backend", "label": "ORM.get()", "file": "wenuroute/graph.py", "line": 780, "params": []}, "wenuroute/graph.py:786:ORM:get": {"kind": "sql", "layer": "backend", "label": "ORM.get()", "file": "wenuroute/graph.py", "line": 786, "params": []}, "wenuroute/graph.py:825:_inject_enhancements": {"kind": "function", "layer": "backend", "label": "_inject_enhancements", "file": "wenuroute/graph.py", "line": 825, "params": ["html", "node_meta", "colour_by_kind"]}, "wenuroute/graph.py:850:render_html": {"kind": "function", "layer": "backend", "label": "render_html", "file": "wenuroute/graph.py", "line": 850, "params": ["graph", "output"]}, "wenuroute/graph.py:896:ORM:get": {"kind": "sql", "layer": "backend", "label": "ORM.get()", "file": "wenuroute/graph.py", "line": 896, "params": []}, "wenuroute/graph.py:897:ORM:get": {"kind": "sql", "layer": "backend", "label": "ORM.get()", "file": "wenuroute/graph.py", "line": 897, "params": []}, "wenuroute/graph.py:938:render_console": {"kind": "function", "layer": "backend", "label": "render_console", "file": "wenuroute/graph.py", "line": 938, "params": ["graph"]}, "wenuroute/graph.py:959:ORM:get": {"kind": "sql", "layer": "backend", "label": "ORM.get()", "file": "wenuroute/graph.py", "line": 959, "params": []}, "wenuroute/models.py:0:wenuroute/models.py": {"kind": "module", "layer": "backend", "label": "wenuroute/models.py", "file": "wenuroute/models.py", "line": 0, "params": []}, "wenuroute/models.py:10:NodeKind": {"kind": "function", "layer": "backend", "label": "NodeKind", "file": "wenuroute/models.py", "line": 10, "params": []}, "wenuroute/models.py:24:RouteNode": {"kind": "function", "layer": "backend", "label": "RouteNode", "file": "wenuroute/models.py", "line": 24, "params": []}, "wenuroute/models.py:35:__hash__": {"kind": "function", "layer": "backend", "label": "__hash__", "file": "wenuroute/models.py", "line": 35, "params": ["self"]}, "wenuroute/models.py:38:__eq__": {"kind": "function", "layer": "backend", "label": "__eq__", "file": "wenuroute/models.py", "line": 38, "params": ["self", "other"]}, "wenuroute/models.py:43:RouteEdge": {"kind": "function", "layer": "backend", "label": "RouteEdge", "file": "wenuroute/models.py", "line": 43, "params": []}, "wenuroute/models.py:50:__hash__": {"kind": "function", "layer": "backend", "label": "__hash__", "file": "wenuroute/models.py", "line": 50, "params": ["self"]}, "wenuroute/models.py:53:__eq__": {"kind": "function", "layer": "backend", "label": "__eq__", "file": "wenuroute/models.py", "line": 53, "params": ["self", "other"]}, "wenuroute/models.py:63:RouteGraph": {"kind": "function", "layer": "backend", "label": "RouteGraph", "file": "wenuroute/models.py", "line": 63, "params": []}, "wenuroute/models.py:69:add_node": {"kind": "function", "layer": "backend", "label": "add_node", "file": "wenuroute/models.py", "line": 69, "params": ["self", "node"]}, "wenuroute/models.py:72:add_edge": {"kind": "function", "layer": "backend", "label": "add_edge", "file": "wenuroute/models.py", "line": 72, "params": ["self", "edge"]}, "wenuroute/models.py:76:merge": {"kind": "function", "layer": "backend", "label": "merge", "file": "wenuroute/models.py", "line": 76, "params": ["self", "other"]}, "wenuroute/__init__.py:0:wenuroute/__init__.py": {"kind": "module", "layer": "backend", "label": "wenuroute/__init__.py", "file": "wenuroute/__init__.py", "line": 0, "params": []}, "wenuroute/parsers/android.py:0:wenuroute/parsers/android.py": {"kind": "module", "layer": "backend", "label": "wenuroute/parsers/android.py", "file": "wenuroute/parsers/android.py", "line": 0, "params": []}, "wenuroute/parsers/android.py:67:AndroidParser": {"kind": "function", "layer": "backend", "label": "AndroidParser", "file": "wenuroute/parsers/android.py", "line": 67, "params": []}, "wenuroute/parsers/android.py:72:parse": {"kind": "function", "layer": "backend", "label": "parse", "file": "wenuroute/parsers/android.py", "line": 72, "params": ["self", "path"]}, "wenuroute/parsers/base.py:0:wenuroute/parsers/base.py": {"kind": "module", "layer": "backend", "label": "wenuroute/parsers/base.py", "file": "wenuroute/parsers/base.py", "line": 0, "params": []}, "wenuroute/parsers/base.py:11:BaseParser": {"kind": "function", "layer": "backend", "label": "BaseParser", "file": "wenuroute/parsers/base.py", "line": 11, "params": []}, "wenuroute/parsers/base.py:17:__init__": {"kind": "function", "layer": "backend", "label": "__init__", "file": "wenuroute/parsers/base.py", "line": 17, "params": ["self", "project_root"]}, "wenuroute/parsers/base.py:24:can_parse": {"kind": "function", "layer": "backend", "label": "can_parse", "file": "wenuroute/parsers/base.py", "line": 24, "params": ["self", "path"]}, "wenuroute/parsers/base.py:29:parse": {"kind": "function", "layer": "backend", "label": "parse", "file": "wenuroute/parsers/base.py", "line": 29, "params": ["self", "path"]}, "wenuroute/parsers/base.py:36:_rel": {"kind": "function", "layer": "backend", "label": "_rel", "file": "wenuroute/parsers/base.py", "line": 36, "params": ["self", "path"]}, "wenuroute/parsers/base.py:43:_node_id": {"kind": "function", "layer": "backend", "label": "_node_id", "file": "wenuroute/parsers/base.py", "line": 43, "params": ["self", "path", "name", "line"]}, "wenuroute/parsers/flutter.py:0:wenuroute/parsers/flutter.py": {"kind": "module", "layer": "backend", "label": "wenuroute/parsers/flutter.py", "file": "wenuroute/parsers/flutter.py", "line": 0, "params": []}, "wenuroute/parsers/flutter.py:45:FlutterParser": {"kind": "function", "layer": "backend", "label": "FlutterParser", "file": "wenuroute/parsers/flutter.py", "line": 45, "params": []}, "wenuroute/parsers/flutter.py:50:parse": {"kind": "function", "layer": "backend", "label": "parse", "file": "wenuroute/parsers/flutter.py", "line": 50, "params": ["self", "path"]}, "wenuroute/parsers/html.py:0:wenuroute/parsers/html.py": {"kind": "module", "layer": "backend", "label": "wenuroute/parsers/html.py", "file": "wenuroute/parsers/html.py", "line": 0, "params": []}, "wenuroute/parsers/html.py:20:HtmlParser": {"kind": "function", "layer": "backend", "label": "HtmlParser", "file": "wenuroute/parsers/html.py", "line": 20, "params": []}, "wenuroute/parsers/html.py:25:parse": {"kind": "function", "layer": "backend", "label": "parse", "file": "wenuroute/parsers/html.py", "line": 25, "params": ["self", "path"]}, "wenuroute/parsers/html.py:37:ORM:get": {"kind": "sql", "layer": "backend", "label": "ORM.get()", "file": "wenuroute/parsers/html.py", "line": 37, "params": []}, "wenuroute/parsers/html.py:62:ORM:get": {"kind": "sql", "layer": "backend", "label": "ORM.get()", "file": "wenuroute/parsers/html.py", "line": 62, "params": []}, "wenuroute/parsers/html.py:92:_process_element": {"kind": "function", "layer": "backend", "label": "_process_element", "file": "wenuroute/parsers/html.py", "line": 92, "params": ["self", "graph", "path", "rel", "module_id", "tag"]}, "wenuroute/parsers/html.py:101:ORM:get": {"kind": "sql", "layer": "backend", "label": "ORM.get()", "file": "wenuroute/parsers/html.py", "line": 101, "params": []}, "wenuroute/parsers/html.py:143:ORM:get": {"kind": "sql", "layer": "backend", "label": "ORM.get()", "file": "wenuroute/parsers/html.py", "line": 143, "params": []}, "wenuroute/parsers/html.py:153:ORM:get": {"kind": "sql", "layer": "backend", "label": "ORM.get()", "file": "wenuroute/parsers/html.py", "line": 153, "params": []}, "wenuroute/parsers/html.py:154:ORM:get": {"kind": "sql", "layer": "backend", "label": "ORM.get()", "file": "wenuroute/parsers/html.py", "line": 154, "params": []}, "wenuroute/parsers/nodejs.py:0:wenuroute/parsers/nodejs.py": {"kind": "module", "layer": "backend", "label": "wenuroute/parsers/nodejs.py", "file": "wenuroute/parsers/nodejs.py", "line": 0, "params": []}, "wenuroute/parsers/nodejs.py:44:NodejsParser": {"kind": "function", "layer": "backend", "label": "NodejsParser", "file": "wenuroute/parsers/nodejs.py", "line": 44, "params": []}, "wenuroute/parsers/nodejs.py:49:parse": {"kind": "function", "layer": "backend", "label": "parse", "file": "wenuroute/parsers/nodejs.py", "line": 49, "params": ["self", "path"]}, "wenuroute/parsers/python.py:0:wenuroute/parsers/python.py": {"kind": "module", "layer": "backend", "label": "wenuroute/parsers/python.py", "file": "wenuroute/parsers/python.py", "line": 0, "params": []}, "wenuroute/parsers/python.py:41:PythonParser": {"kind": "function", "layer": "backend", "label": "PythonParser", "file": "wenuroute/parsers/python.py", "line": 41, "params": []}, "wenuroute/parsers/python.py:46:parse": {"kind": "function", "layer": "backend", "label": "parse", "file": "wenuroute/parsers/python.py", "line": 46, "params": ["self", "path"]}, "wenuroute/parsers/python.py:137:_walk_ast": {"kind": "function", "layer": "backend", "label": "_walk_ast", "file": "wenuroute/parsers/python.py", "line": 137, "params": ["self", "graph", "tree", "path", "rel", "module_id"]}, "wenuroute/parsers/python.py:149:_params": {"kind": "function", "layer": "backend", "label": "_params", "file": "wenuroute/parsers/python.py", "line": 149, "params": ["node"]}, "wenuroute/parsers/python.py:153:_visit": {"kind": "function", "layer": "backend", "label": "_visit", "file": "wenuroute/parsers/python.py", "line": 153, "params": ["node", "parent_id"]}, "wenuroute/parsers/python.py:195:_handle_call": {"kind": "function", "layer": "backend", "label": "_handle_call", "file": "wenuroute/parsers/python.py", "line": 195, "params": ["node", "parent_id"]}, "wenuroute/parsers/react.py:0:wenuroute/parsers/react.py": {"kind": "module", "layer": "backend", "label": "wenuroute/parsers/react.py", "file": "wenuroute/parsers/react.py", "line": 0, "params": []}, "wenuroute/parsers/react.py:56:ReactParser": {"kind": "function", "layer": "backend", "label": "ReactParser", "file": "wenuroute/parsers/react.py", "line": 56, "params": []}, "wenuroute/parsers/react.py:61:parse": {"kind": "function", "layer": "backend", "label": "parse", "file": "wenuroute/parsers/react.py", "line": 61, "params": ["self", "path"]}, "wenuroute/parsers/__init__.py:0:wenuroute/parsers/__init__.py": {"kind": "module", "layer": "backend", "label": "wenuroute/parsers/__init__.py", "file": "wenuroute/parsers/__init__.py", "line": 0, "params": []}};
+  var hiddenKinds  = new Set();
+  var hiddenLayers = new Set();
+  var physicsOn    = false;
+  var clustersActive = false;
+  var focusIds     = null;  // null = full view; plain object used as id→true set
+  var ctxTargetNode = null;
+
+  // ── Clustering ────────────────────────────────────────────────────────── //
+
+  var clusterFileMap = {};
+  for (var id in META) {
+    var file = META[id].file;
+    if (!file || file.indexOf('://') !== -1) continue;
+    if (!clusterFileMap[file]) clusterFileMap[file] = [];
+    clusterFileMap[file].push(id);
+  }
+  Object.keys(clusterFileMap).forEach(function(f) {
+    if (clusterFileMap[f].length < 2) delete clusterFileMap[f];
+  });
+
+  var layerBg     = {frontend:'#0d2444', backend:'#0d2a1a', mobile:'#220d44', other:'#1a1a3a'};
+  var layerBorder = {frontend:'#2196F3', backend:'#4CAF50', mobile:'#9C27B0', other:'#607D8B'};
+
+  function activateClusters() {
+    for (var file in clusterFileMap) {
+      var ids   = clusterFileMap[file];
+      var layer = (META[ids[0]] || {}).layer || 'other';
+      var parts = file.replace(/\\/g, '/').split('/');
+      var shortName = parts[parts.length - 1];
+      network.cluster({
+        joinCondition: (function(fIds) {
+          return function(n) { return fIds.indexOf(n.id) !== -1; };
+        })(ids),
+        clusterNodeProperties: {
+          id: 'wrcluster::' + file,
+          label: shortName + ' (' + ids.length + ')',
+          shape: 'square', borderDashes: [6, 3], borderWidth: 2,
+          color: {
+            background: layerBg[layer]     || layerBg.other,
+            border:     layerBorder[layer] || layerBorder.other,
+            highlight:  {background: '#2a2a6a', border: '#aaaaff'}
+          },
+          size: Math.min(20 + ids.length * 2, 42),
+          font: {color: '#e0e0e0', size: 12, bold: true},
+          title: '<b>' + file + '</b><br>' + ids.length + ' nodos<br><i>doble clic para expandir</i>'
+        }
+      });
+    }
+    clustersActive = true;
+    document.getElementById('wr-cluster-btn').textContent = '📂 Desagrupar todo';
+    updateStats();
+  }
+
+  function deactivateClusters() {
+    for (var limit = 300; limit > 0; limit--) {
+      var found = false;
+      nodes.getIds().forEach(function(nid) {
+        if (network.isCluster(nid)) { network.openCluster(nid); found = true; }
+      });
+      if (!found) break;
+    }
+    clustersActive = false;
+    document.getElementById('wr-cluster-btn').textContent = '📁 Agrupar por módulo';
+    updateStats();
+  }
+
+  network.on('doubleClick', function(params) {
+    if (params.nodes.length === 1 && network.isCluster(params.nodes[0])) {
+      network.openCluster(params.nodes[0]);
+      if (!nodes.getIds().some(function(nid) { return network.isCluster(nid); })) {
+        clustersActive = false;
+        document.getElementById('wr-cluster-btn').textContent = '📁 Agrupar por módulo';
+      }
+      updateStats();
+    }
+  });
+
+  document.getElementById('wr-cluster-btn').addEventListener('click', function() {
+    if (clustersActive) deactivateClusters();
+    else activateClusters();
+    network.fit({animation: {duration: 500, easingFunction: 'easeInOutQuad'}});
+  });
+
+  // ── Filters ───────────────────────────────────────────────────────────── //
+
+  function applyFilters() {
+    var updates = [];
+    for (var id in META) {
+      var m = META[id];
+      var hide = hiddenKinds.has(m.kind) || hiddenLayers.has(m.layer);
+      if (focusIds !== null && !focusIds[id]) hide = true;
+      updates.push({id: id, hidden: hide});
+    }
+    nodes.update(updates);
+    updateStats();
+  }
+
+  function updateStats() {
+    var total = Object.keys(META).length, visible = 0;
+    for (var id in META) {
+      var m = META[id];
+      if (hiddenKinds.has(m.kind) || hiddenLayers.has(m.layer)) continue;
+      if (focusIds !== null && !focusIds[id]) continue;
+      visible++;
+    }
+    var totalFiles   = Object.keys(clusterFileMap).length;
+    var openClusters = nodes.getIds().filter(function(nid) { return network.isCluster(nid); }).length;
+    var el = document.getElementById('wr-stats');
+    if (!el) return;
+    var html = 'Nodos: <b>' + visible + '</b> / ' + total;
+    if (clustersActive)    html += '<br>Clusters: <b>' + openClusters + '</b> / ' + totalFiles;
+    if (focusIds !== null) html += '<br>En foco: <b>' + Object.keys(focusIds).length + '</b> nodos';
+    el.innerHTML = html;
+    drawMinimap();
+  }
+
+  document.querySelectorAll('input[data-kind]').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+      if (this.checked) hiddenKinds.delete(this.dataset.kind);
+      else hiddenKinds.add(this.dataset.kind);
+      applyFilters();
+    });
+  });
+
+  document.querySelectorAll('.wr-layer-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var layer = this.dataset.layer;
+      if (hiddenLayers.has(layer)) { hiddenLayers.delete(layer); this.classList.add('active'); }
+      else { hiddenLayers.add(layer); this.classList.remove('active'); }
+      applyFilters();
+    });
+  });
+
+  // ── Search ────────────────────────────────────────────────────────────── //
+
+  var searchInput = document.getElementById('wr-search');
+  var searchInfo  = document.getElementById('wr-search-info');
+  searchInput.addEventListener('input', function() {
+    var q = this.value.trim().toLowerCase();
+    network.unselectAll();
+    if (!q) { searchInfo.textContent = ''; return; }
+    var matches = [];
+    for (var id in META) {
+      var m = META[id];
+      if (m.label.toLowerCase().indexOf(q) !== -1 || id.toLowerCase().indexOf(q) !== -1)
+        matches.push(id);
+    }
+    searchInfo.textContent = matches.length + ' resultado(s)';
+    if (matches.length > 0) {
+      network.selectNodes(matches);
+      if (matches.length <= 40)
+        network.fit({nodes: matches, animation: {duration: 400, easingFunction: 'easeInOutQuad'}});
+    }
+  });
+
+  // ── Focus mode (ego network) ──────────────────────────────────────────── //
+
+  // BFS up to `depth` hops; returns plain object used as id→true lookup
+  function buildEgoNetwork(startId, depth) {
+    var visited  = {};
+    visited[startId] = true;
+    var frontier = [startId];
+    for (var d = 0; d < depth; d++) {
+      var next = [];
+      frontier.forEach(function(nid) {
+        network.getConnectedNodes(nid).forEach(function(cid) {
+          if (!visited[cid]) { visited[cid] = true; next.push(cid); }
+        });
+      });
+      if (next.length === 0) break;
+      frontier = next;
+    }
+    return visited;
+  }
+
+  function enterFocus(nodeId, depth) {
+    focusIds = buildEgoNetwork(nodeId, depth);
+    applyFilters();
+    var label  = META[nodeId] ? META[nodeId].label : nodeId;
+    var count  = Object.keys(focusIds).length;
+    var banner = document.getElementById('wr-focus-banner');
+    banner.innerHTML = '🎯 <b>' + label + '</b><br>'
+      + count + ' nodo' + (count !== 1 ? 's' : '')
+      + ' · ' + depth + ' nivel' + (depth > 1 ? 'es' : '');
+    banner.style.display = 'block';
+    document.getElementById('wr-focus-exit').style.display = 'block';
+    var ids = Object.keys(focusIds);
+    if (ids.length > 0 && ids.length <= 120)
+      network.fit({nodes: ids, animation: {duration: 400, easingFunction: 'easeInOutQuad'}});
+  }
+
+  function exitFocus() {
+    focusIds = null;
+    applyFilters();
+    document.getElementById('wr-focus-banner').style.display = 'none';
+    document.getElementById('wr-focus-exit').style.display   = 'none';
+  }
+
+  document.getElementById('wr-focus-exit').addEventListener('click', exitFocus);
+
+  // Context menu — created via JS so no extra HTML injection is needed
+  var ctxMenu = document.createElement('div');
+  ctxMenu.id = 'wr-ctx-menu';
+  ctxMenu.innerHTML =
+    '<div class="wr-ctx-title"  id="wr-ctx-label"></div>'  +
+    '<div class="wr-ctx-item"   id="wr-ctx-f1">🎯 Ver vecinos directos (1 nivel)</div>'    +
+    '<div class="wr-ctx-item"   id="wr-ctx-f2">🔭 Ampliar a 2 niveles de profundidad</div>' +
+    '<div class="wr-ctx-separator" id="wr-ctx-sep"></div>'  +
+    '<div class="wr-ctx-item"   id="wr-ctx-expand">📂 Expandir cluster</div>';
+  document.body.appendChild(ctxMenu);
+
+  function positionAndShow(e, nodeId) {
+    ctxTargetNode = nodeId;
+    var isCluster = network.isCluster(nodeId);
+    var label = isCluster
+      ? nodeId.replace('wrcluster::', '')
+      : (META[nodeId] ? META[nodeId].label : nodeId);
+    document.getElementById('wr-ctx-label').textContent   = label;
+    document.getElementById('wr-ctx-f1').style.display      = isCluster ? 'none' : 'block';
+    document.getElementById('wr-ctx-f2').style.display      = isCluster ? 'none' : 'block';
+    document.getElementById('wr-ctx-sep').style.display     = isCluster ? 'none' : 'block';
+    document.getElementById('wr-ctx-expand').style.display  = isCluster ? 'block' : 'none';
+    ctxMenu.style.display = 'block';
+    // Keep within viewport
+    var x = e.clientX, y = e.clientY;
+    var w = ctxMenu.offsetWidth, h = ctxMenu.offsetHeight;
+    if (x + w > window.innerWidth)  x = window.innerWidth  - w - 8;
+    if (y + h > window.innerHeight) y = window.innerHeight - h - 8;
+    ctxMenu.style.left = x + 'px';
+    ctxMenu.style.top  = y + 'px';
+  }
+
+  document.getElementById('mynetwork').addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    var rect   = this.getBoundingClientRect();
+    var nodeId = network.getNodeAt({x: e.clientX - rect.left, y: e.clientY - rect.top});
+    if (!nodeId) { ctxMenu.style.display = 'none'; return; }
+    positionAndShow(e, nodeId);
+  });
+
+  document.getElementById('wr-ctx-f1').addEventListener('click', function() {
+    if (ctxTargetNode) enterFocus(ctxTargetNode, 1);
+    ctxMenu.style.display = 'none';
+  });
+  document.getElementById('wr-ctx-f2').addEventListener('click', function() {
+    if (ctxTargetNode) enterFocus(ctxTargetNode, 2);
+    ctxMenu.style.display = 'none';
+  });
+  document.getElementById('wr-ctx-expand').addEventListener('click', function() {
+    if (ctxTargetNode && network.isCluster(ctxTargetNode)) network.openCluster(ctxTargetNode);
+    ctxMenu.style.display = 'none';
+  });
+  // Dismiss on any outside click
+  document.addEventListener('click', function(e) {
+    if (!ctxMenu.contains(e.target)) ctxMenu.style.display = 'none';
+  });
+
+  // ── Toolbar ───────────────────────────────────────────────────────────── //
+
+  document.getElementById('wr-fit-btn').addEventListener('click', function() {
+    network.fit({animation: {duration: 400, easingFunction: 'easeInOutQuad'}});
+  });
+
+  var physicsBtn = document.getElementById('wr-physics-btn');
+  physicsBtn.addEventListener('click', function() {
+    physicsOn = !physicsOn;
+    network.setOptions({physics: {enabled: physicsOn}});
+    this.textContent = physicsOn ? '⏸ Pausar física' : '▶ Activar física';
+  });
+
+  network.once('stabilized', function() {
+    setTimeout(function() {
+      network.setOptions({physics: {enabled: false}});
+      physicsOn = false;
+    }, 400);
+  });
+
+  // ── Detail panel (replaces floating tooltip) ──────────────────────────── //
+
+  var kindColors = {
+    ui_element:'#4CAF50', function:'#2196F3', endpoint:'#FF9800',
+    sql:'#F44336', style:'#9C27B0', event:'#00BCD4', module:'#607D8B', unknown:'#9E9E9E'
+  };
+
+  var detPanel = document.createElement('div');
+  detPanel.id = 'wr-detail';
+  detPanel.innerHTML =
+    '<div id="wr-det-header">' +
+      '<span id="wr-det-header-title">Detalle del nodo</span>' +
+      '<button id="wr-det-close" title="Cerrar">✕</button>' +
+    '</div>' +
+    '<div id="wr-det-body"></div>';
+  document.body.appendChild(detPanel);
+
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function openDetail() {
+    document.getElementById('wr-detail').classList.add('wr-open');
+    document.body.classList.add('wr-detail-open');
+  }
+  function closeDetail() {
+    document.getElementById('wr-detail').classList.remove('wr-open');
+    document.body.classList.remove('wr-detail-open');
+  }
+
+  document.getElementById('wr-det-close').addEventListener('click', closeDetail);
+
+  function connItemHtml(nid) {
+    var nm = META[nid]; if (!nm) return '';
+    return '<div class="wr-det-conn" data-nid="' + escHtml(nid) + '">' +
+      '<span class="wr-det-dot" style="background:' + (kindColors[nm.kind] || '#9E9E9E') + '"></span>' +
+      '<span class="wr-det-conn-label">' + escHtml(nm.label) + '</span>' +
+      '</div>';
+  }
+
+  function showNodeDetail(nodeId) {
+    var body = document.getElementById('wr-det-body');
+    var html = '';
+
+    if (network.isCluster(nodeId)) {
+      var file = nodeId.replace('wrcluster::', '');
+      var cIds = clusterFileMap[file] || [];
+      html += '<div class="wr-det-kind-row"><span class="wr-det-dot" style="background:#607D8B"></span>' +
+              '<span class="wr-det-kind">CLUSTER</span></div>';
+      html += '<div class="wr-det-name">' + escHtml(file.split('/').pop()) + '</div>';
+      html += '<div class="wr-det-prop"><div class="wr-det-prop-lbl">Archivo</div>' +
+              '<div class="wr-det-prop-val">' + escHtml(file) + '</div></div>';
+      html += '<div class="wr-det-section-title">Contenido (' + cIds.length + ' nodos)</div>';
+      html += cIds.map(function(nid) {
+        var nm = META[nid]; if (!nm) return '';
+        return '<div class="wr-det-conn"><span class="wr-det-dot" style="background:' +
+          (kindColors[nm.kind]||'#9E9E9E') + '"></span>' +
+          '<span class="wr-det-conn-label">' + escHtml(nm.label) + '</span></div>';
+      }).join('');
+      body.innerHTML = html;
+      openDetail();
+      return;
+    }
+
+    var m = META[nodeId]; if (!m) return;
+    var c = kindColors[m.kind] || '#9E9E9E';
+    var inNodes  = network.getConnectedNodes(nodeId, 'from');
+    var outNodes = network.getConnectedNodes(nodeId, 'to');
+
+    html += '<div class="wr-det-kind-row">' +
+            '<span class="wr-det-dot" style="background:' + c + '"></span>' +
+            '<span class="wr-det-kind">' + escHtml(m.kind || '').toUpperCase() + '</span>' +
+            '</div>';
+    html += '<div class="wr-det-name">' + escHtml(m.label) + '</div>';
+
+    if (m.file) {
+      html += '<div class="wr-det-prop"><div class="wr-det-prop-lbl">Archivo</div>' +
+              '<div class="wr-det-prop-val">' + escHtml(m.file) + '</div></div>';
+    }
+    if (m.line) {
+      html += '<div class="wr-det-prop"><div class="wr-det-prop-lbl">Línea</div>' +
+              '<div class="wr-det-prop-val">' + escHtml(m.line) + '</div></div>';
+    }
+    if (m.params && m.params.length > 0) {
+      html += '<div class="wr-det-prop"><div class="wr-det-prop-lbl">Parámetros</div>' +
+              '<div class="wr-det-prop-val">' + escHtml(m.params.join(', ')) + '</div></div>';
+    }
+
+    if (inNodes.length > 0) {
+      html += '<div class="wr-det-section-title">← Llamado por (' + inNodes.length + ')</div>';
+      html += inNodes.map(connItemHtml).join('');
+    }
+    if (outNodes.length > 0) {
+      html += '<div class="wr-det-section-title">→ Llama a / conecta con (' + outNodes.length + ')</div>';
+      html += outNodes.map(connItemHtml).join('');
+    }
+    if (!inNodes.length && !outNodes.length) {
+      html += '<div class="wr-det-section-title">Conexiones</div>' +
+              '<div class="wr-det-empty">Sin conexiones detectadas</div>';
+    }
+
+    body.innerHTML = html;
+
+    // Click on a connected node → navigate to it and show its detail
+    body.querySelectorAll('.wr-det-conn[data-nid]').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var nid = this.dataset.nid;
+        network.selectNodes([nid]);
+        network.focus(nid, {scale: 1.2, animation: {duration: 300, easingFunction: 'easeInOutQuad'}});
+        showNodeDetail(nid);
+      });
+    });
+
+    openDetail();
+  }
+
+  // Click on a node → open detail panel; click on empty canvas → close it
+  network.on('click', function(params) {
+    if (params.nodes.length === 1) showNodeDetail(params.nodes[0]);
+    else if (params.nodes.length === 0 && params.edges.length === 0) closeDetail();
+  });
+
+  // Disable floating tooltips — the panel replaces them
+  network.setOptions({interaction: {tooltipDelay: 99999}});
+
+  // ── Minimap ───────────────────────────────────────────────────────────── //
+
+  var MM_W = 200, MM_H = 140;
+  var mmEl = document.createElement('div');
+  mmEl.id = 'wr-minimap';
+  mmEl.innerHTML =
+    '<div id="wr-minimap-header">' +
+      '<span id="wr-minimap-label">🗺 Vista general</span>' +
+      '<button id="wr-minimap-hide" title="Ocultar">✕</button>' +
+    '</div>' +
+    '<canvas id="wr-minimap-canvas" width="' + MM_W + '" height="' + MM_H + '"></canvas>';
+  document.body.appendChild(mmEl);
+
+  var mmCanvas = document.getElementById('wr-minimap-canvas');
+  var mmCtx    = mmCanvas.getContext('2d');
+  var mmToGraph = null;
+
+  function drawMinimap() {
+    if (mmEl.style.display === 'none') return;
+    var positions = network.getPositions();
+    var ids = Object.keys(positions);
+    mmCtx.clearRect(0, 0, MM_W, MM_H);
+    mmCtx.fillStyle = '#0d0d1a';
+    mmCtx.fillRect(0, 0, MM_W, MM_H);
+    if (!ids.length) return;
+
+    var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    ids.forEach(function(id) {
+      var p = positions[id];
+      if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
+    });
+    var pad = 12, rX = (maxX - minX) || 1, rY = (maxY - minY) || 1;
+    var sc = Math.min((MM_W - pad*2) / rX, (MM_H - pad*2) / rY);
+    var ox = pad + (MM_W - pad*2 - rX*sc) / 2;
+    var oy = pad + (MM_H - pad*2 - rY*sc) / 2;
+
+    function toMM(x, y) { return {x: ox + (x-minX)*sc, y: oy + (y-minY)*sc}; }
+    mmToGraph = function(mx, my) { return {x: minX + (mx-ox)/sc, y: minY + (my-oy)/sc}; };
+
+    // Edges
+    mmCtx.strokeStyle = 'rgba(85,85,119,0.35)';
+    mmCtx.lineWidth = 0.5;
+    edges.get().forEach(function(e) {
+      var f = positions[e.from], t = positions[e.to];
+      if (!f || !t) return;
+      var fm = toMM(f.x, f.y), tm = toMM(t.x, t.y);
+      mmCtx.beginPath(); mmCtx.moveTo(fm.x, fm.y); mmCtx.lineTo(tm.x, tm.y); mmCtx.stroke();
+    });
+
+    // Nodes (cluster nodes get their layer border colour; regular nodes get kind colour)
+    ids.forEach(function(id) {
+      var p = positions[id], mm = toMM(p.x, p.y), m = META[id];
+      var isCluster = id.indexOf('wrcluster::') === 0;
+      var color;
+      if (isCluster) {
+        var file0 = id.replace('wrcluster::', '');
+        var fid0  = (clusterFileMap[file0] || [])[0];
+        var layer0 = fid0 && META[fid0] ? META[fid0].layer : 'other';
+        color = layerBorder[layer0] || '#607D8B';
+      } else {
+        color = m ? (kindColors[m.kind] || '#9E9E9E') : '#9E9E9E';
+      }
+      var hidden = !isCluster && m &&
+        (hiddenKinds.has(m.kind) || hiddenLayers.has(m.layer) ||
+         (focusIds !== null && !focusIds[id]));
+      mmCtx.fillStyle = hidden ? 'rgba(80,80,80,0.3)' : color;
+      mmCtx.beginPath();
+      mmCtx.arc(mm.x, mm.y, isCluster ? 3.5 : (hidden ? 1.2 : 2), 0, Math.PI * 2);
+      mmCtx.fill();
+    });
+
+    // Viewport rectangle
+    var vc = network.getViewPosition(), vs = network.getScale();
+    var netDiv = document.getElementById('mynetwork');
+    var vpW = netDiv.offsetWidth / vs, vpH = netDiv.offsetHeight / vs;
+    var tl = toMM(vc.x - vpW/2, vc.y - vpH/2), br = toMM(vc.x + vpW/2, vc.y + vpH/2);
+    mmCtx.fillStyle = 'rgba(100,120,200,0.12)';
+    mmCtx.fillRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+    mmCtx.strokeStyle = 'rgba(170,180,255,0.75)';
+    mmCtx.lineWidth = 1;
+    mmCtx.strokeRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+  }
+
+  function setMinimapVisible(visible) {
+    mmEl.style.display = visible ? '' : 'none';
+    var btn = document.getElementById('wr-minimap-btn');
+    if (btn) btn.textContent = visible ? '🗺 Ocultar minimapa' : '🗺 Mostrar minimapa';
+    if (visible) drawMinimap();
+  }
+
+  mmCanvas.addEventListener('click', function(e) {
+    if (!mmToGraph) return;
+    var rect = mmCanvas.getBoundingClientRect();
+    var gp = mmToGraph(
+      (e.clientX - rect.left) * (MM_W / rect.width),
+      (e.clientY - rect.top)  * (MM_H / rect.height)
+    );
+    network.moveTo({position: gp, animation: {duration: 250, easingFunction: 'easeInOutQuad'}});
+  });
+
+  document.getElementById('wr-minimap-hide').addEventListener('click', function() {
+    setMinimapVisible(false);
+  });
+  document.getElementById('wr-minimap-btn').addEventListener('click', function() {
+    setMinimapVisible(mmEl.style.display === 'none');
+  });
+
+  network.on('zoom',              drawMinimap);
+  network.on('dragEnd',           drawMinimap);
+  network.on('animationFinished', drawMinimap);
+  network.on('stabilized',        drawMinimap);
+
+  updateStats();
+})();
+</script>
+</body>
+</html>

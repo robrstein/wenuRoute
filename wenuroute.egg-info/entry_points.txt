@@ -1,0 +1,2 @@
+[console_scripts]
+wenuroute = wenuroute.cli:main
