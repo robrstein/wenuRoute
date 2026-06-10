@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Multiplatform code analysis tool that shows execution routes as navigable visual graphs"
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "MIT" }
+license = { text = "GPL-3.0-or-later" }
 dependencies = [
     "pyvis>=0.3.2",
     "beautifulsoup4>=4.12",
