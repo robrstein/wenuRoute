@@ -139,11 +139,11 @@ MIT
 ## Screenshots
 
 
-![Screenshot 2](https://raw.githubusercontent.com/robrstein/wenuRoute/refs/heads/main/screenshot/wenuroute_Screenshot_2.jpg)
+![Screenshot](https://raw.githubusercontent.com/robrstein/wenuRoute/refs/heads/main/screenshot/wenuroute_Screenshot_2.jpg)
 
 
-![Screenshot 2](https://raw.githubusercontent.com/robrstein/wenuRoute/refs/heads/main/screenshot/wenuroute_Screenshot_3.jpg)
+![Screenshot](https://raw.githubusercontent.com/robrstein/wenuRoute/refs/heads/main/screenshot/wenuroute_Screenshot_3.jpg)
 
-![Screenshot 2](https://raw.githubusercontent.com/robrstein/wenuRoute/refs/heads/main/screenshot/wenuroute_Screenshot_4.jpg)
+![Screenshot](https://raw.githubusercontent.com/robrstein/wenuRoute/refs/heads/main/screenshot/wenuroute_Screenshot_4.jpg)
 
-![Screenshot 2](https://raw.githubusercontent.com/robrstein/wenuRoute/refs/heads/main/screenshot/wenuroute_Screenshot_5.jpg)
+![Screenshot](https://raw.githubusercontent.com/robrstein/wenuRoute/refs/heads/main/screenshot/wenuroute_Screenshot_5.jpg)
