@@ -138,15 +138,11 @@ MIT
 
 ## Screenshots
 
-<p>
-!<img src="https://raw.githubusercontent.com/robrstein/wenuRoute/main/screenshot/wenuRoute_Screenshot_2.jpg" alt="Screenshot 2">
 
-</p>
+![Screenshot 2](https://raw.githubusercontent.com/robrstein/wenuRoute/refs/heads/main/screenshot/wenuroute_Screenshot_2.jpg)
 
-<p>
-  <img src="screenshot/wenuRoute_Screenshot_3.jpg" alt="Screenshot 3" width="600">
-</p>
 
-<p>
-  <img src="screenshot/wenuRoute_Screenshot_4.jpg" alt="Screenshot 4" width="600">
-</p>
+<img src="screenshot/wenuRoute_Screenshot_3.jpg" alt="Screenshot 3" width="600">
+
+<img src="screenshot/wenuRoute_Screenshot_4.jpg" alt="Screenshot 4" width="600">
+
