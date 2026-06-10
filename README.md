@@ -142,7 +142,7 @@ MIT
 ![Screenshot 2](https://raw.githubusercontent.com/robrstein/wenuRoute/refs/heads/main/screenshot/wenuroute_Screenshot_2.jpg)
 
 
-<img src="screenshot/wenuRoute_Screenshot_3.jpg" alt="Screenshot 3" width="600">
+![Screenshot 2](https://raw.githubusercontent.com/robrstein/wenuRoute/refs/heads/main/screenshot/wenuroute_Screenshot_3.jpg)
 
-<img src="screenshot/wenuRoute_Screenshot_4.jpg" alt="Screenshot 4" width="600">
+![Screenshot 2](https://raw.githubusercontent.com/robrstein/wenuRoute/refs/heads/main/screenshot/wenuroute_Screenshot_4.jpg)
 
