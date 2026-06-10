@@ -11,6 +11,8 @@
 - ⚡ **Arquitectura modular**: un parser por lenguaje, fácil de extender.
 
 ## Instalación
+python -m venv .venv
+.\.venv\Scripts\activate
 
 ```bash
 pip install -e .
