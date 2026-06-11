@@ -2,3 +2,7 @@
 
 /build
 /dist
+/wenuroute.egg-info
+/wenuroute.egg-info
+/wenuroute/__pycache__
+/wenuroute/parsers
