@@ -1,16 +1,18 @@
 Metadata-Version: 2.4
 Name: wenuroute
-Version: 0.1.0
+Version: 1.0.0
 Summary: Multiplatform code analysis tool that shows execution routes as navigable visual graphs
-License: MIT
+License: GPL-3.0-or-later
 Requires-Python: >=3.9
 Description-Content-Type: text/markdown
+License-File: LICENSE
 Requires-Dist: pyvis>=0.3.2
 Requires-Dist: beautifulsoup4>=4.12
 Requires-Dist: click>=8.1
 Requires-Dist: networkx>=3.1
 Requires-Dist: lxml>=4.9
 Requires-Dist: rich>=13.0
+Dynamic: license-file
 
 # wenuRoute
 
@@ -25,6 +27,8 @@ Requires-Dist: rich>=13.0
 - ⚡ **Arquitectura modular**: un parser por lenguaje, fácil de extender.
 
 ## Instalación
+python -m venv .venv
+.\.venv\Scripts\activate
 
 ```bash
 pip install -e .
@@ -148,4 +152,20 @@ python -m pytest tests/test_parsers.py::TestPythonParser::test_detects_flask_rou
 
 ## Licencia
 
-MIT
+GPL v3 (GNU General Public License v3.0)
+
+Este programa es software libre: puedes redistribuirlo y/o modificarlo bajo los términos de la Licencia Pública General de GNU publicada por la Free Software Foundation, ya sea la versión 3 de la Licencia, o (a tu elección) cualquier versión posterior.
+
+Ver el archivo [LICENSE](LICENSE) para más detalles.
+
+## Screenshots
+
+
+![Screenshot](https://raw.githubusercontent.com/robrstein/wenuRoute/refs/heads/main/screenshot/wenuroute_Screenshot_2.jpg)
+
+
+![Screenshot](https://raw.githubusercontent.com/robrstein/wenuRoute/refs/heads/main/screenshot/wenuroute_Screenshot_3.jpg)
+
+![Screenshot](https://raw.githubusercontent.com/robrstein/wenuRoute/refs/heads/main/screenshot/wenuroute_Screenshot_4.jpg)
+
+![Screenshot](https://raw.githubusercontent.com/robrstein/wenuRoute/refs/heads/main/screenshot/wenuroute_Screenshot_5.jpg)
