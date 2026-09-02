@@ -663,7 +663,7 @@ _JS = """\
           },
           size: Math.min(20 + ids.length * 1.5, 46),
           font: {color: '#e0e0e0', size: 12, bold: true},
-          title: dir + '\n' + ids.length + ' archivo(s)\ndoble clic para expandir',
+          title: dir + '\\n' + ids.length + ' archivo(s)\\ndoble clic para expandir',
         },
       });
     });
