@@ -17,6 +17,7 @@ class NodeKind(str, Enum):
     STYLE = "style"                 # CSS class / stylesheet reference
     EVENT = "event"                 # DOM event, gesture, intent …
     MODULE = "module"               # file / module node (top-level grouping)
+    DEPENDENCY = "dependency"       # external package declared in a manifest
     UNKNOWN = "unknown"
 
 

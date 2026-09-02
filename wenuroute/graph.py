@@ -19,6 +19,7 @@ _COLOUR: dict[NodeKind, str] = {
     NodeKind.STYLE:      "#9C27B0",   # purple
     NodeKind.EVENT:      "#00BCD4",   # cyan
     NodeKind.MODULE:     "#607D8B",   # grey-blue
+    NodeKind.DEPENDENCY: "#FFC107",   # amber
     NodeKind.UNKNOWN:    "#9E9E9E",   # grey
 }
 
@@ -30,6 +31,7 @@ _SHAPE: dict[NodeKind, str] = {
     NodeKind.STYLE:      "dot",
     NodeKind.EVENT:      "star",
     NodeKind.MODULE:     "square",
+    NodeKind.DEPENDENCY: "triangle",
     NodeKind.UNKNOWN:    "dot",
 }
 
@@ -67,6 +69,7 @@ _KIND_LABELS: dict[str, str] = {
     "style":      "Style",
     "event":      "Event",
     "module":     "Module",
+    "dependency": "Dependency",
     "unknown":    "Unknown",
 }
 
@@ -952,6 +955,7 @@ def render_console(graph: RouteGraph) -> str:
         NodeKind.ENDPOINT,
         NodeKind.SQL,
         NodeKind.STYLE,
+        NodeKind.DEPENDENCY,
         NodeKind.UNKNOWN,
     ]
 
