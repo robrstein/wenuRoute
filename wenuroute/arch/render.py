@@ -308,19 +308,32 @@ section[hidden] { display: none !important; }
 #wa-detail h3 { margin: 0 0 10px; color: #e8e8ff; word-break: break-all; }
 .wa-detail-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; border-bottom: 1px solid #1e1e3f; }
 .wa-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-#view-sequence { display: flex; gap: 16px; }
-#wa-seq-list { width: 300px; flex-shrink: 0; }
+/* Fixed viewport height so the list and the canvas each get their own
+   scrollbar — without this, scrolling down a long sequence list scrolls the
+   whole row (list + diagram) together and the diagram scrolls out of view. */
+#view-sequence { display: flex; gap: 16px; height: 70vh; min-height: 420px; }
+#wa-seq-list { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; min-height: 0; }
 #wa-seq-search {
   width: 100%; padding: 7px 10px; margin-bottom: 10px; border: 1px solid #3d3d6e;
-  background: #1e1e3f; color: #e0e0e0; border-radius: 6px; font-size: 12px;
+  background: #1e1e3f; color: #e0e0e0; border-radius: 6px; font-size: 12px; flex-shrink: 0;
 }
+#wa-seq-list-items { overflow-y: auto; flex: 1; min-height: 0; }
+.wa-seq-group-title {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .7px; color: #6272a4;
+  padding: 10px 4px 4px; position: sticky; top: 0; background: #1a1a2e;
+}
+.wa-seq-group-title:first-child { padding-top: 4px; }
 .wa-seq-item {
   padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;
   margin-bottom: 4px; border: 1px solid transparent; line-height: 1.4;
 }
 .wa-seq-item:hover { background: #1e1e3f; }
 .wa-seq-item.wa-active { background: #2d3a6e; border-color: #7aa2f7; }
-#wa-seq-canvas-wrap { flex: 1; overflow: auto; background: #12122a; border: 1px solid #2a2a5a; border-radius: 8px; padding: 12px; }
+.wa-seq-origin-badge {
+  display: inline-block; margin-left: 5px; font-size: 10px; color: #6272a4;
+  background: #1e1e3f; border-radius: 8px; padding: 1px 6px;
+}
+#wa-seq-canvas-wrap { flex: 1; overflow: auto; background: #12122a; border: 1px solid #2a2a5a; border-radius: 8px; padding: 12px; min-height: 0; }
 #wa-seq-toolbar { margin-bottom: 10px; display: flex; gap: 8px; align-items: center; }
 .wa-btn {
   padding: 6px 12px; border: 1px solid #3d3d6e; background: #1e1e3f; color: #e0e0e0;
@@ -797,12 +810,40 @@ _JS = """\
   function renderSeqList(filter) {
     seqListEl.innerHTML = '';
     var q = (filter || '').toLowerCase();
-    SEQUENCES.filter(function(s) { return !q || s.title.toLowerCase().indexOf(q) !== -1; })
-      .forEach(function(seq) {
+    var matches = SEQUENCES.filter(function(s) { return !q || s.title.toLowerCase().indexOf(q) !== -1; });
+    if (!matches.length) {
+      seqListEl.innerHTML = '<div class="wa-empty">Sin resultados.</div>';
+      return;
+    }
+
+    // Group by originating file so a long list stays scannable instead of
+    // one flat dump — most useful once a project has dozens of sequences.
+    var groups = {}, order = [];
+    matches.forEach(function(seq) {
+      var file = (seq.steps[0] && seq.steps[0].file) || '(otro)';
+      if (!groups[file]) { groups[file] = []; order.push(file); }
+      groups[file].push(seq);
+    });
+    order.sort();
+
+    order.forEach(function(file) {
+      var header = document.createElement('div');
+      header.className = 'wa-seq-group-title';
+      header.textContent = file + ' (' + groups[file].length + ')';
+      seqListEl.appendChild(header);
+
+      groups[file].forEach(function(seq) {
         var item = document.createElement('div');
         item.className = 'wa-seq-item';
         item.dataset.id = seq.id;
-        item.textContent = seq.title;
+        item.appendChild(document.createTextNode(seq.title));
+        if (seq.origin_count > 1) {
+          var badge = document.createElement('span');
+          badge.className = 'wa-seq-origin-badge';
+          badge.title = seq.origin_count + ' elementos distintos llegan a este mismo flujo';
+          badge.textContent = '×' + seq.origin_count;
+          item.appendChild(badge);
+        }
         item.addEventListener('click', function() {
           document.querySelectorAll('.wa-seq-item').forEach(function(el) { el.classList.remove('wa-active'); });
           item.classList.add('wa-active');
@@ -810,6 +851,7 @@ _JS = """\
         });
         seqListEl.appendChild(item);
       });
+    });
   }
 
   document.getElementById('wa-seq-search').addEventListener('input', function() {
@@ -876,6 +918,9 @@ _JS = """\
     svg += '</svg>';
 
     seqCanvas.innerHTML = svg;
+    // Show the full flow immediately — "Reproducir" is an opt-in replay,
+    // not a reveal you have to click through before seeing anything.
+    seqCanvas.querySelectorAll('.wa-seq-step').forEach(function(s) { s.classList.add('wa-visible'); });
   }
 
   document.getElementById('wa-seq-play').addEventListener('click', function() {
@@ -988,7 +1033,7 @@ def render_arch_html(code_graph: RouteGraph, dependency_graph: RouteGraph, outpu
         '<div id="wa-seq-canvas-wrap">'
         '<div id="wa-seq-toolbar">'
         '<button class="wa-btn" id="wa-seq-play">▶ Reproducir</button>'
-        '<button class="wa-btn" id="wa-seq-reset">↺ Mostrar todo</button>'
+        '<button class="wa-btn" id="wa-seq-reset">↺ Reiniciar</button>'
         "</div>"
         '<div id="wa-seq-canvas"></div>'
         "</div>"

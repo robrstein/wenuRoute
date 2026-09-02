@@ -17,6 +17,19 @@ _JS_HANDLERS = re.compile(
 _FUNC_CALL = re.compile(r"(\w[\w.]*)\s*\(([^)]*)\)")
 
 
+def _truncate(text: str, limit: int) -> str:
+    """Truncate *text* to *limit* chars, preferring the last space/comma
+    within the last 15 chars of the cutoff so labels don't end mid-token
+    (e.g. mid string-literal in a raw JS snippet)."""
+    if len(text) <= limit:
+        return text
+    cut = text[:limit]
+    boundary = max(cut.rfind(" "), cut.rfind(","))
+    if boundary > limit - 15:
+        cut = cut[: boundary + 1].rstrip()
+    return cut + "…"
+
+
 class HtmlParser(BaseParser):
     """Parse HTML files for UI elements and their event handlers."""
 
@@ -98,8 +111,18 @@ class HtmlParser(BaseParser):
         tag: Tag,
     ) -> None:
         tag_name = tag.name or "element"
-        text = tag.get_text(strip=True)[:40] or tag.get("id") or tag.get("name") or tag_name
-        label = f"<{tag_name}> {text}"
+        # Prefer visible text, then accessibility/identity attributes — and
+        # if none of those exist (icon-only buttons/links are common), don't
+        # fall back to the tag name itself: "<a> a" / "<button> button" reads
+        # as real content when it's really just "no distinguishing text".
+        text = (
+            tag.get_text(strip=True)[:40]
+            or tag.get("aria-label", "")
+            or tag.get("title", "")
+            or tag.get("id", "")
+            or tag.get("name", "")
+        )
+        label = f"<{tag_name}> {text}" if text else f"<{tag_name}>"
         elem_id = self._node_id(path, label, 0)
 
         graph.add_node(
@@ -114,7 +137,7 @@ class HtmlParser(BaseParser):
                 graph.add_node(
                     RouteNode(
                         id=event_id,
-                        label=f"{attr}: {value[:60]}",
+                        label=f"{attr}: {_truncate(value, 60)}",
                         kind=NodeKind.EVENT,
                         file=rel,
                     )
@@ -144,7 +167,7 @@ class HtmlParser(BaseParser):
             if href and not href.startswith("#"):
                 ep_id = f"endpoint:{href}"
                 graph.add_node(
-                    RouteNode(id=ep_id, label=href, kind=NodeKind.ENDPOINT, file=rel)
+                    RouteNode(id=ep_id, label=_truncate(href, 55), kind=NodeKind.ENDPOINT, file=rel)
                 )
                 graph.add_edge(RouteEdge(elem_id, ep_id, "navigates"))
 
@@ -157,7 +180,7 @@ class HtmlParser(BaseParser):
                 graph.add_node(
                     RouteNode(
                         id=ep_id,
-                        label=f"{method} {action}",
+                        label=f"{method} {_truncate(action, 50)}",
                         kind=NodeKind.ENDPOINT,
                         file=rel,
                         metadata={"method": method},

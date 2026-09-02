@@ -26,6 +26,10 @@ _ENTRY_KINDS = {NodeKind.UI_ELEMENT, NodeKind.EVENT, NodeKind.ENDPOINT}
 MAX_DEPTH = 6
 MAX_CHAINS_PER_ENTRY = 3
 MAX_CHAINS = 40
+# Raw generation runs to a higher budget than MAX_CHAINS so the two dedup
+# passes below (see derive_sequences) have real duplicates to remove instead
+# of the cap silently starving out entry points late in traversal order.
+_RAW_CHAIN_BUDGET = MAX_CHAINS * 4
 
 
 def _build_flow_adjacency(graph: RouteGraph) -> dict[str, list[tuple[str, str]]]:
@@ -92,17 +96,63 @@ def _build_sequence(graph: RouteGraph, seq_id: str, steps: list[tuple[str, str |
         "id": seq_id,
         "title": title,
         "entry_kind": step_dicts[0]["kind"] if step_dicts else "unknown",
+        "origin_count": 1,
         "steps": step_dicts,
     }
+
+
+def _drop_event_prefixed_duplicates(sequences: list[dict]) -> list[dict]:
+    """Drop an EVENT-rooted sequence whose steps are exactly some other
+    sequence's steps with its first (UI_ELEMENT) hop removed.
+
+    ``_ENTRY_KINDS`` includes both UI_ELEMENT and EVENT because an EVENT can
+    also be a legitimate standalone entry (e.g. a programmatically dispatched
+    one) — but the common case is a UI_ELEMENT ``--triggers-->`` EVENT edge,
+    which makes the EVENT node *also* qualify as an entry on its own,
+    producing a second sequence that's just the first one minus its opening
+    hop. That's not new information, just noise.
+    """
+    tails = {tuple(s["node_id"] for s in seq["steps"][1:]) for seq in sequences}
+    return [
+        seq for seq in sequences
+        if not (seq["entry_kind"] == "event" and tuple(s["node_id"] for s in seq["steps"]) in tails)
+    ]
+
+
+def _merge_similar_origins(sequences: list[dict]) -> list[dict]:
+    """Collapse sequences that differ only in *which* element started them.
+
+    E.g. three different DOM elements all wired to the same ``onclick``
+    handler calling the same function produce three sequences identical from
+    the second step onward. Keep the first as a representative and fold the
+    rest into its ``origin_count`` rather than listing near-duplicates.
+    """
+    merged: dict[tuple, dict] = {}
+    result: list[dict] = []
+    for seq in sequences:
+        tail_key = tuple((s["label"], s.get("edge_label")) for s in seq["steps"][1:])
+        if not tail_key:
+            result.append(seq)
+            continue
+        existing = merged.get(tail_key)
+        if existing is None:
+            merged[tail_key] = seq
+            result.append(seq)
+        else:
+            existing["origin_count"] += 1
+    return result
 
 
 def derive_sequences(graph: RouteGraph) -> list[dict]:
     """Derive a bounded list of call-chain sequences from *graph*.
 
     Each returned dict has shape:
-    ``{"id", "title", "entry_kind", "steps": [{"node_id", "label", "kind",
-    "file", "line", "edge_label"?}]}``. ``edge_label`` is present on every
-    step except the first (it records the edge that led into that step).
+    ``{"id", "title", "entry_kind", "origin_count", "steps": [{"node_id",
+    "label", "kind", "file", "line", "edge_label"?}]}``. ``edge_label`` is
+    present on every step except the first (it records the edge that led
+    into that step). ``origin_count`` > 1 means this many near-duplicate
+    sequences (same call chain, different triggering element) were folded
+    into this one — see ``_merge_similar_origins``.
     """
     adjacency = _build_flow_adjacency(graph)
 
@@ -115,13 +165,19 @@ def derive_sequences(graph: RouteGraph) -> list[dict]:
 
     sequences: list[dict] = []
     for entry_id in entry_ids:
-        if len(sequences) >= MAX_CHAINS:
+        if len(sequences) >= _RAW_CHAIN_BUDGET:
             break
         for steps in _dfs_chains(entry_id, adjacency, {entry_id}, depth=0):
             if len(steps) < 2:
                 continue  # an entry with no real hop isn't a sequence
-            if len(sequences) >= MAX_CHAINS:
+            if len(sequences) >= _RAW_CHAIN_BUDGET:
                 break
             sequences.append(_build_sequence(graph, f"seq:{len(sequences)}", steps))
+
+    sequences = _drop_event_prefixed_duplicates(sequences)
+    sequences = _merge_similar_origins(sequences)
+    sequences = sequences[:MAX_CHAINS]
+    for i, seq in enumerate(sequences):
+        seq["id"] = f"seq:{i}"
 
     return sequences
