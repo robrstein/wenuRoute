@@ -12,6 +12,7 @@ Requires-Dist: click>=8.1
 Requires-Dist: networkx>=3.1
 Requires-Dist: lxml>=4.9
 Requires-Dist: rich>=13.0
+Requires-Dist: tomli>=2.0; python_version < "3.11"
 Dynamic: license-file
 
 # wenuRoute
@@ -23,6 +24,7 @@ Dynamic: license-file
 - 🔍 **Analiza proyectos** HTML, React/JSX/TypeScript, Python (Flask, FastAPI, Django), Node.js/Express, Flutter/Dart y Android (Java/Kotlin).
 - 🔗 **Sigue cadenas de llamadas**: CSS → JS → endpoint → SQL.
 - 📊 **Genera un grafo HTML interactivo** con PyVis (nodos coloreados por tipo, panel de detalle lateral, filtros por capa y tipo).
+- 📚 **Genera una biblioteca de arquitectura** con `--arch`: diagrama de componentes y diagramas de secuencia interactivos en un solo HTML (más vistas en camino — ver [Modo arquitectura](#modo-arquitectura---arch)).
 - 🖥️ **Salida en consola** con `--format text` para entornos sin navegador.
 - ⚡ **Arquitectura modular**: un parser por lenguaje, fácil de extender.
 
@@ -39,7 +41,7 @@ pip install -e .
 ### Requisitos
 
 - Python 3.9+
-- Dependencias instaladas automáticamente: `pyvis`, `beautifulsoup4`, `click`, `networkx`, `lxml`, `rich`.
+- Dependencias instaladas automáticamente: `pyvis`, `beautifulsoup4`, `click`, `networkx`, `lxml`, `rich`, `tomli` (solo en Python < 3.11).
 
 ## Uso
 
@@ -107,6 +109,38 @@ Los clusters se muestran como nodos cuadrados con borde punteado; el color del b
 | 🟣 Morado | Style | Hoja de estilos CSS |
 | 🩵 Cian | Event | Evento DOM / gesto / intent |
 | 🔷 Gris | Module | Archivo / módulo |
+| 🟡 Ámbar | Dependency | Paquete externo declarado en un manifiesto (solo en modo `--arch`) |
+
+## Modo arquitectura (`--arch`)
+
+`wenuroute --arch` genera una **biblioteca digital de arquitectura**: un único archivo HTML autocontenido e interactivo con distintas vistas técnicas del proyecto, generadas automáticamente a partir del código fuente — sin intervención manual. Es un modo independiente del grafo de rutas de ejecución por defecto.
+
+```bash
+# Generar la biblioteca de arquitectura (wenuroute_arch.html)
+wenuroute --arch
+
+# Analizar un proyecto específico y guardar en un archivo personalizado
+wenuroute ./mi-proyecto --arch -o arquitectura.html
+```
+
+`--arch` solo produce salida HTML (no es compatible con `--format text`).
+
+| Diagrama | Estado | Descripción |
+|---|---|---|
+| 🏛 Arquitectura | ✅ Disponible | Módulos agrupados por capa (Frontend/Backend/Mobile), y dependencias externas detectadas en manifiestos |
+| 🔀 Secuencia | ✅ Disponible | Cadenas de llamada derivadas del grafo (UI/Endpoint → función → SQL), animadas tipo diagrama UML |
+| 🌊 Data Flow | 🚧 Roadmap | Flujo de datos entre entidades, procesos y almacenes |
+| ♻️ Ciclo de vida | 🚧 Roadmap | Ciclo de vida de una petición o entidad a través del sistema |
+| 🛠 Pipeline | 🚧 Roadmap | Pipelines de build/CI-CD detectados en el proyecto |
+
+**Qué se escanea para la vista de Arquitectura:**
+
+- El código fuente ya analizado por los parsers de lenguaje (mismo motor que el grafo por defecto).
+- Manifiestos de dependencias: `requirements.txt`, `pyproject.toml` (`project.dependencies` / `optional-dependencies`) y `package.json` (`dependencies` / `devDependencies`).
+
+Escaneo de esquema de base de datos, infraestructura (Docker/Kubernetes/Terraform/CI-CD), detección de microservicios/API gateways y un futuro modo de deltas de git quedan fuera de esta versión — son roadmap.
+
+**Nota sobre secuencias:** las cadenas de llamada se derivan de las aristas que ya detectan los parsers de cada lenguaje. Hoy son más ricas para código con handlers de UI explícitos (HTML `onclick`, React `onClick`/`fetch`/`axios`); los endpoints de backend (Flask/FastAPI/Express) todavía no están enlazados a su función manejadora en el grafo, así que proyectos puramente backend pueden mostrar pocas o ninguna secuencia por ahora.
 
 ## Lenguajes soportados
 
@@ -128,16 +162,21 @@ wenuroute/
 │   ├── analyzer.py     # Orquestador: recorre el árbol de archivos
 │   ├── graph.py        # Renderizado HTML (PyVis) y texto
 │   ├── models.py       # RouteNode, RouteEdge, RouteGraph
-│   └── parsers/
-│       ├── base.py     # Clase abstracta BaseParser
-│       ├── html.py
-│       ├── react.py
-│       ├── python.py
-│       ├── nodejs.py
-│       ├── flutter.py
-│       └── android.py
+│   ├── parsers/
+│   │   ├── base.py     # Clase abstracta BaseParser
+│   │   ├── html.py
+│   │   ├── react.py
+│   │   ├── python.py
+│   │   ├── nodejs.py
+│   │   ├── flutter.py
+│   │   └── android.py
+│   └── arch/           # Modo --arch: biblioteca digital de arquitectura
+│       ├── manifest.py # Escáner de dependencias (requirements.txt, pyproject.toml, package.json)
+│       ├── sequence.py # Derivación de cadenas de llamada (diagramas de secuencia)
+│       └── render.py   # Renderizado HTML (portada + vistas Arquitectura/Secuencia)
 └── tests/
-    └── test_parsers.py
+    ├── test_parsers.py
+    └── test_arch.py
 ```
 
 ## Desarrollo

@@ -1,6 +1,7 @@
 LICENSE
 README.md
 pyproject.toml
+tests/test_arch.py
 tests/test_parsers.py
 wenuroute/__init__.py
 wenuroute/analyzer.py
@@ -13,6 +14,10 @@ wenuroute.egg-info/dependency_links.txt
 wenuroute.egg-info/entry_points.txt
 wenuroute.egg-info/requires.txt
 wenuroute.egg-info/top_level.txt
+wenuroute/arch/__init__.py
+wenuroute/arch/manifest.py
+wenuroute/arch/render.py
+wenuroute/arch/sequence.py
 wenuroute/parsers/__init__.py
 wenuroute/parsers/android.py
 wenuroute/parsers/base.py
