@@ -22,6 +22,14 @@ class Analyzer:
         "ios", "android/.gradle",
     }
 
+    # WenuRoute's own default output filenames — never treat a previous run's
+    # *output* as *input*. Without this, re-running the tool on a project
+    # that already has a generated report ingests that HTML (and, on a
+    # second re-run, ingests the previous ingestion too, nesting deeper each
+    # time — visible as garbled, re-escaped JSON in the generated network
+    # data past a certain project size).
+    _SKIP_FILENAMES = {"wenuroute_graph.html", "wenuroute_arch.html"}
+
     def __init__(
         self,
         project_root: Path,
@@ -68,6 +76,9 @@ class Analyzer:
                 continue
             # Skip blacklisted directories
             if any(skip in path.parts for skip in self._SKIP_DIRS):
+                continue
+            # Never ingest wenuroute's own previously generated output
+            if path.name in self._SKIP_FILENAMES:
                 continue
             # Only include files whose extension is known to any parser
             if self._parsers_for(path):

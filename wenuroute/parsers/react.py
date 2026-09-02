@@ -3,7 +3,7 @@
 Detects:
 - React component definitions (function/class components)
 - JSX elements with event handlers (onClick, onChange, …)
-- fetch() / axios calls → endpoints
+- fetch() / axios calls (including wrapped clients, e.g. apiClient.get(...)) → endpoints
 - Function definitions and their parameters
 - import / require statements
 """
@@ -43,6 +43,21 @@ _FETCH_CALL = re.compile(
 _AXIOS_CALL = re.compile(
     r"""axios\s*\.\s*(get|post|put|delete|patch)\s*\(\s*['"`]([^'"`]+)['"`]""",
     re.IGNORECASE | re.MULTILINE,
+)
+
+# HTTP calls through a *wrapped* axios/fetch client (e.g. `apiClient.get(...)`,
+# `http.post(...)`) — the overwhelmingly common real-world pattern, since apps
+# almost always centralise interceptors/auth headers in one instance rather
+# than calling the bare `axios` import at every call site. Kept as a second,
+# broader pass after `_AXIOS_CALL` (which still fires for literal `axios.`
+# calls) rather than folding into one regex, so a plain `axios.get(...)` call
+# isn't double-counted under two different id schemes.
+#: the URL argument must start with "/" (or a template-literal expression
+#: that resolves to one, e.g. `` `${BASE}/users` ``) — otherwise `.get("key")`
+#: on an ordinary Map/object would be misread as an API call.
+_WRAPPED_HTTP_CALL = re.compile(
+    r"""(?!axios\b)\w+\s*\.\s*(get|post|put|delete|patch)\s*\(\s*['"`](/[^'"`]*|\$\{[^'"`]*)['"`]""",
+    re.MULTILINE,
 )
 
 _FUNC_CALL = re.compile(r"(\w[\w.]*)\s*\(([^)]*)\)")
@@ -151,6 +166,24 @@ class ReactParser(BaseParser):
                 RouteNode(
                     id=ep_id,
                     label=f"axios.{method} {url}",
+                    kind=NodeKind.ENDPOINT,
+                    file=rel,
+                    line=line,
+                    metadata={"method": method},
+                )
+            )
+            graph.add_edge(RouteEdge(module_id, ep_id, "calls"))
+
+        # Wrapped HTTP client calls (apiClient.get(...), http.post(...), ...)
+        for m in _WRAPPED_HTTP_CALL.finditer(source):
+            method = m.group(1).upper()
+            url = m.group(2)
+            line = source[: m.start()].count("\n") + 1
+            ep_id = f"endpoint:{method}:{url}"
+            graph.add_node(
+                RouteNode(
+                    id=ep_id,
+                    label=f"{method} {url}",
                     kind=NodeKind.ENDPOINT,
                     file=rel,
                     line=line,

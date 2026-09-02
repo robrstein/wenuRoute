@@ -5,6 +5,7 @@ Detects:
 - Flask / FastAPI / Django URL routes (decorators and urlpatterns)
 - SQL queries (raw strings and ORM calls)
 - Function calls between detected symbols
+- import / from-import statements
 """
 
 from __future__ import annotations
@@ -55,6 +56,7 @@ class PythonParser(BaseParser):
         # AST-based analysis
         try:
             tree = ast.parse(source, filename=str(path))
+            self._walk_imports(graph, tree, module_id)
             self._walk_ast(graph, tree, path, rel, module_id)
         except SyntaxError:
             pass  # fall back to regex only
@@ -133,6 +135,36 @@ class PythonParser(BaseParser):
         return graph
 
     # ------------------------------------------------------------------
+
+    def _walk_imports(self, graph: RouteGraph, tree: ast.AST, module_id: str) -> None:
+        """Record ``import`` / ``from ... import`` statements.
+
+        Each import target becomes a ``import:<dotted>`` node (mirroring the
+        convention used by the React/Node parsers), where ``<dotted>`` keeps
+        any leading dots from a relative import (e.g. ``.utils``,
+        ``..pkg.mod``) so ``wenuroute/arch/links.py`` can resolve it back to
+        a project file.
+        """
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    self._add_import(graph, module_id, alias.name)
+            elif isinstance(node, ast.ImportFrom):
+                prefix = "." * node.level
+                if node.module:
+                    self._add_import(graph, module_id, f"{prefix}{node.module}")
+                else:
+                    # `from . import a, b` — each name is itself a submodule
+                    for alias in node.names:
+                        self._add_import(graph, module_id, f"{prefix}{alias.name}")
+
+    @staticmethod
+    def _add_import(graph: RouteGraph, module_id: str, dotted: str) -> None:
+        imp_id = f"import:{dotted}"
+        graph.add_node(
+            RouteNode(id=imp_id, label=dotted, kind=NodeKind.MODULE, file=dotted)
+        )
+        graph.add_edge(RouteEdge(module_id, imp_id, "imports"))
 
     def _walk_ast(
         self,

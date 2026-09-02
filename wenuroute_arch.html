@@ -1,0 +1,629 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>WenuRoute — Architecture Library</title><script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js"></script><style>
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: #1a1a2e; color: #e0e0e0;
+  font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px;
+}
+#wa-header {
+  padding: 14px 22px; background: #12122a; border-bottom: 1px solid #2a2a5a;
+  display: flex; align-items: center; justify-content: space-between;
+}
+#wa-header h1 { font-size: 17px; margin: 0; color: #7aa2f7; font-weight: 700; }
+#wa-tabs { display: flex; gap: 6px; padding: 10px 22px; background: #14142c; flex-wrap: wrap; }
+.wa-tab {
+  padding: 7px 14px; border: 1px solid #3d3d6e; background: #1e1e3f; color: #e0e0e0;
+  border-radius: 6px; cursor: pointer; font-size: 13px; transition: background .12s;
+}
+.wa-tab:hover:not(:disabled) { background: #252550; }
+.wa-tab.active { background: #2d3a6e; border-color: #7aa2f7; }
+.wa-tab:disabled { opacity: .45; cursor: default; }
+main { padding: 22px; }
+section[hidden] { display: none !important; }
+.wa-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+.wa-card {
+  background: #12122a; border: 1px solid #2a2a5a; border-radius: 10px; padding: 16px;
+  cursor: pointer; transition: border-color .12s;
+}
+.wa-card:hover { border-color: #7aa2f7; }
+.wa-card.wa-soon { cursor: default; opacity: .6; }
+.wa-card-icon { font-size: 26px; margin-bottom: 8px; }
+.wa-card-title { font-weight: 700; margin-bottom: 4px; }
+.wa-card-desc { font-size: 12px; color: #9a9ac0; line-height: 1.5; }
+.wa-badge {
+  display: inline-block; margin-top: 10px; font-size: 10px; text-transform: uppercase;
+  letter-spacing: .6px; padding: 3px 8px; border-radius: 20px;
+}
+.wa-badge-ready { background: #0d2a1a; color: #6fcf97; border: 1px solid #2e7d4f; }
+.wa-badge-soon { background: #2a2210; color: #e0b34d; border: 1px solid #7a5c1e; }
+.wa-lane { margin-bottom: 22px; }
+.wa-lane-title { font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: #9a9ac0; margin-bottom: 8px; }
+.wa-lane-boxes { display: flex; flex-wrap: wrap; gap: 10px; }
+.wa-box {
+  background: #12122a; border: 1px solid #2a2a5a; border-radius: 8px; padding: 10px 12px;
+  min-width: 150px; cursor: pointer; transition: border-color .12s;
+}
+.wa-box:hover { border-color: #7aa2f7; }
+.wa-box-title { font-weight: 700; font-size: 13px; margin-bottom: 4px; word-break: break-all; }
+.wa-box-meta { font-size: 11px; color: #9a9ac0; }
+#wa-arch-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+#wa-arch-search {
+  padding: 6px 10px; border: 1px solid #3d3d6e; background: #1e1e3f; color: #e0e0e0;
+  border-radius: 6px; font-size: 12px; width: 220px;
+}
+#wa-arch-search-info { font-size: 11px; color: #6272a4; min-width: 70px; }
+#wa-arch-filters {
+  display: flex; gap: 4px 16px; flex-wrap: wrap; align-items: center;
+  margin-bottom: 10px; padding: 8px 10px; background: #14142c; border-radius: 6px;
+}
+.wa-filter-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #c8c8ea; cursor: pointer; }
+.wa-filter-item input { cursor: pointer; accent-color: #7aa2f7; }
+.wa-legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.wa-legend-dot.wa-legend-diamond { border-radius: 0; transform: rotate(45deg); width: 8px; height: 8px; }
+.wa-legend-line { display: inline-block; width: 16px; height: 0; border-top: 2px solid; }
+#wa-arch-canvas-wrap {
+  background: #12122a; border: 1px solid #2a2a5a; border-radius: 8px;
+  height: 62vh; min-height: 380px; position: relative;
+}
+#wa-arch-network { width: 100%; height: 100%; }
+#wa-arch-stats { font-size: 11px; color: #6272a4; padding: 6px 2px; }
+#wa-arch-deps-title { font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: #9a9ac0; margin: 18px 0 8px; }
+#wa-arch-folded-title { font-size: 11px; color: #9a9ac0; margin: 14px 0 8px; line-height: 1.5; }
+.wa-chip-clickable { cursor: pointer; transition: border-color .12s; }
+.wa-chip-clickable:hover { border-color: #7aa2f7; color: #e0e0e0; }
+.wa-chip-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+.wa-chip {
+  font-size: 11px; padding: 4px 9px; border-radius: 14px; background: #1e1e3f;
+  border: 1px solid #3d3d6e; color: #c8c8ea;
+}
+.wa-chip.wa-chip-dev { opacity: .65; }
+#wa-detail {
+  position: fixed; top: 0; right: -320px; width: 320px; height: 100vh;
+  background: #12122a; border-left: 1px solid #2a2a5a; overflow-y: auto;
+  transition: right .2s ease; z-index: 50; padding: 14px;
+}
+#wa-detail.wa-open { right: 0; }
+#wa-detail-close { float: right; background: none; border: none; color: #9a9ac0; font-size: 16px; cursor: pointer; }
+#wa-detail h3 { margin: 0 0 10px; color: #e8e8ff; word-break: break-all; }
+.wa-detail-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; border-bottom: 1px solid #1e1e3f; }
+.wa-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+#view-sequence { display: flex; gap: 16px; }
+#wa-seq-list { width: 300px; flex-shrink: 0; }
+#wa-seq-search {
+  width: 100%; padding: 7px 10px; margin-bottom: 10px; border: 1px solid #3d3d6e;
+  background: #1e1e3f; color: #e0e0e0; border-radius: 6px; font-size: 12px;
+}
+.wa-seq-item {
+  padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;
+  margin-bottom: 4px; border: 1px solid transparent; line-height: 1.4;
+}
+.wa-seq-item:hover { background: #1e1e3f; }
+.wa-seq-item.wa-active { background: #2d3a6e; border-color: #7aa2f7; }
+#wa-seq-canvas-wrap { flex: 1; overflow: auto; background: #12122a; border: 1px solid #2a2a5a; border-radius: 8px; padding: 12px; }
+#wa-seq-toolbar { margin-bottom: 10px; display: flex; gap: 8px; align-items: center; }
+.wa-btn {
+  padding: 6px 12px; border: 1px solid #3d3d6e; background: #1e1e3f; color: #e0e0e0;
+  border-radius: 6px; cursor: pointer; font-size: 12px;
+}
+.wa-btn:hover { background: #252550; }
+.wa-seq-step { opacity: 0; transition: opacity .25s ease; }
+.wa-seq-step.wa-visible { opacity: 1; }
+.wa-empty { color: #6272a4; font-style: italic; padding: 20px; font-size: 13px; }
+</style></head><body><div id="wa-header"><h1>⚡ WenuRoute — Architecture Library</h1></div><div id="wa-tabs"><button class="wa-tab active" data-view="library">📚 Library</button><button class="wa-tab" data-view="architecture">🏛 Arquitectura</button><button class="wa-tab" data-view="sequence">🔀 Secuencias</button><button class="wa-tab" data-view="dataflow" disabled>🌊 Flujo de datos (soon)</button><button class="wa-tab" data-view="lifecycle" disabled>♻️ Ciclo de vida (soon)</button><button class="wa-tab" data-view="pipeline" disabled>🛠 Pipeline (soon)</button></div><main><section id="view-library"><p style="color:#9a9ac0;margin:0 0 16px;">Biblioteca digital de arquitectura, generada automáticamente a partir del código fuente.</p><div class="wa-cards"><div class="wa-card" data-goto="architecture"><div class="wa-card-icon">🏛</div><div class="wa-card-title">Diagrama de Arquitectura</div><div class="wa-card-desc">Módulos, capas del proyecto y dependencias externas.</div><span class="wa-badge wa-badge-ready">✅ Disponible</span></div><div class="wa-card" data-goto="sequence"><div class="wa-card-icon">🔀</div><div class="wa-card-title">Diagramas de Secuencia</div><div class="wa-card-desc">Cadenas de llamada: UI/Endpoint → función → SQL.</div><span class="wa-badge wa-badge-ready">✅ Disponible</span></div><div class="wa-card wa-soon"><div class="wa-card-icon">🌊</div><div class="wa-card-title">Data Flow Diagram</div><div class="wa-card-desc">Flujo de datos entre entidades, procesos y almacenes.</div><span class="wa-badge wa-badge-soon">🚧 Roadmap</span></div><div class="wa-card wa-soon"><div class="wa-card-icon">♻️</div><div class="wa-card-title">Mapa de Ciclo de Vida</div><div class="wa-card-desc">Ciclo de vida de una petición o entidad a través del sistema.</div><span class="wa-badge wa-badge-soon">🚧 Roadmap</span></div><div class="wa-card wa-soon"><div class="wa-card-icon">🛠</div><div class="wa-card-title">Pipeline Diagram</div><div class="wa-card-desc">Pipelines de build/CI-CD detectados en el proyecto.</div><span class="wa-badge wa-badge-soon">🚧 Roadmap</span></div></div></section><section id="view-architecture" hidden><div id="wa-architecture-body"><div id="wa-arch-toolbar"><input type="text" id="wa-arch-search" placeholder="Buscar archivo o carpeta…"><span id="wa-arch-search-info"></span><button class="wa-btn" id="wa-arch-fit">⊞ Encuadrar todo</button><button class="wa-btn" id="wa-arch-physics">▶ Activar física</button><button class="wa-btn" id="wa-arch-cluster-btn">📁 Agrupar por carpeta</button></div><div id="wa-arch-filters"><label class="wa-filter-item"><input type="checkbox" checked data-layer="backend"><span class="wa-legend-dot" style="background:#4CAF50"></span>⚙️ Backend</label><label class="wa-filter-item"><input type="checkbox" checked data-layer="dependency"><span class="wa-legend-dot" style="background:#FFC107"></span>🧩 Dependencia</label><label class="wa-filter-item"><input type="checkbox" checked data-edgekind="dependency"><span class="wa-legend-line" style="border-color:#FFC107;border-top-style:dashed"></span>Depende de</label><label class="wa-filter-item"><input type="checkbox" checked data-edgekind="import"><span class="wa-legend-line" style="border-color:#555577;"></span>Import</label><label class="wa-filter-item"><input type="checkbox" id="wa-arch-show-isolated">Mostrar nodos aislados (1)</label></div><div id="wa-arch-canvas-wrap"><div id="wa-arch-network"></div></div><div id="wa-arch-stats"></div><div id="wa-arch-folded-deps"></div><div id="wa-arch-deps"></div></div></section><section id="view-sequence" hidden><div id="wa-seq-list"><input type="text" id="wa-seq-search" placeholder="Buscar secuencia…"><div id="wa-seq-list-items"></div></div><div id="wa-seq-canvas-wrap"><div id="wa-seq-toolbar"><button class="wa-btn" id="wa-seq-play">▶ Reproducir</button><button class="wa-btn" id="wa-seq-reset">↺ Mostrar todo</button></div><div id="wa-seq-canvas"></div></div></section><section id="view-dataflow" hidden><div class="wa-cards" style="grid-template-columns:1fr;max-width:520px;"><div class="wa-card wa-soon"><div class="wa-card-icon">🌊</div><div class="wa-card-title">Data Flow Diagram</div><div class="wa-card-desc">Flujo de datos entre entidades, procesos y almacenes.</div><span class="wa-badge wa-badge-soon">🚧 Roadmap — aún no implementado</span></div></div></section><section id="view-lifecycle" hidden><div class="wa-cards" style="grid-template-columns:1fr;max-width:520px;"><div class="wa-card wa-soon"><div class="wa-card-icon">♻️</div><div class="wa-card-title">Mapa de Ciclo de Vida</div><div class="wa-card-desc">Ciclo de vida de una petición o entidad a través del sistema.</div><span class="wa-badge wa-badge-soon">🚧 Roadmap — aún no implementado</span></div></div></section><section id="view-pipeline" hidden><div class="wa-cards" style="grid-template-columns:1fr;max-width:520px;"><div class="wa-card wa-soon"><div class="wa-card-icon">🛠</div><div class="wa-card-title">Pipeline Diagram</div><div class="wa-card-desc">Pipelines de build/CI-CD detectados en el proyecto.</div><span class="wa-badge wa-badge-soon">🚧 Roadmap — aún no implementado</span></div></div></section></main><div id="wa-detail"></div><script>
+(function() {
+  var ARCH = {"lanes": [{"key": "backend", "icon": "⚙️", "label": "Backend", "boxes": [{"file": "tests/__init__.py", "name": "__init__.py", "layer": "backend", "counts": {}, "total": 0}, {"file": "tests/test_arch.py", "name": "test_arch.py", "layer": "backend", "counts": {"function": 20, "sql": 3}, "total": 23}, {"file": "tests/test_parsers.py", "name": "test_parsers.py", "layer": "backend", "counts": {"function": 33, "endpoint": 3, "sql": 1}, "total": 37}, {"file": "wenuroute/__init__.py", "name": "__init__.py", "layer": "backend", "counts": {}, "total": 0}, {"file": "wenuroute/analyzer.py", "name": "analyzer.py", "layer": "backend", "counts": {"function": 5, "sql": 1}, "total": 6}, {"file": "wenuroute/arch/__init__.py", "name": "__init__.py", "layer": "backend", "counts": {}, "total": 0}, {"file": "wenuroute/arch/links.py", "name": "links.py", "layer": "backend", "counts": {"function": 8, "sql": 5, "endpoint": 1}, "total": 14}, {"file": "wenuroute/arch/manifest.py", "name": "manifest.py", "layer": "backend", "counts": {"function": 9, "sql": 4}, "total": 13}, {"file": "wenuroute/arch/render.py", "name": "render.py", "layer": "backend", "counts": {"function": 6, "sql": 20}, "total": 26}, {"file": "wenuroute/arch/sequence.py", "name": "sequence.py", "layer": "backend", "counts": {"function": 4, "sql": 1}, "total": 5}, {"file": "wenuroute/cli.py", "name": "cli.py", "layer": "backend", "counts": {"function": 2}, "total": 2}, {"file": "wenuroute/graph.py", "name": "graph.py", "layer": "backend", "counts": {"function": 5, "sql": 6}, "total": 11}, {"file": "wenuroute/models.py", "name": "models.py", "layer": "backend", "counts": {"function": 11}, "total": 11}, {"file": "wenuroute/parsers/__init__.py", "name": "__init__.py", "layer": "backend", "counts": {}, "total": 0}, {"file": "wenuroute/parsers/android.py", "name": "android.py", "layer": "backend", "counts": {"function": 2}, "total": 2}, {"file": "wenuroute/parsers/base.py", "name": "base.py", "layer": "backend", "counts": {"function": 6}, "total": 6}, {"file": "wenuroute/parsers/flutter.py", "name": "flutter.py", "layer": "backend", "counts": {"function": 2}, "total": 2}, {"file": "wenuroute/parsers/html.py", "name": "html.py", "layer": "backend", "counts": {"function": 3, "sql": 6}, "total": 9}, {"file": "wenuroute/parsers/nodejs.py", "name": "nodejs.py", "layer": "backend", "counts": {"function": 2}, "total": 2}, {"file": "wenuroute/parsers/python.py", "name": "python.py", "layer": "backend", "counts": {"function": 8}, "total": 8}, {"file": "wenuroute/parsers/react.py", "name": "react.py", "layer": "backend", "counts": {"function": 2}, "total": 2}]}], "detail": {"tests/__init__.py": [{"id": "tests/__init__.py:0:tests/__init__.py", "label": "tests/__init__.py", "kind": "module", "line": 0, "params": []}], "tests/test_arch.py": [{"id": "tests/test_arch.py:0:tests/test_arch.py", "label": "tests/test_arch.py", "kind": "module", "line": 0, "params": []}, {"id": "tests/test_arch.py:15:TestManifestScanner", "label": "TestManifestScanner", "kind": "function", "line": 15, "params": []}, {"id": "tests/test_arch.py:16:test_requirements_txt_basic", "label": "test_requirements_txt_basic", "kind": "function", "line": 16, "params": ["self", "tmp_path"]}, {"id": "tests/test_arch.py:32:test_requirements_txt_missing_file_no_crash", "label": "test_requirements_txt_missing_file_no_crash", "kind": "function", "line": 32, "params": ["self", "tmp_path"]}, {"id": "tests/test_arch.py:39:test_pyproject_toml_project_dependencies", "label": "test_pyproject_toml_project_dependencies", "kind": "function", "line": 39, "params": ["self", "tmp_path"]}, {"id": "tests/test_arch.py:54:test_pyproject_toml_optional_dependencies_group_tagged", "label": "test_pyproject_toml_optional_dependencies_group_tagged", "kind": "function", "line": 54, "params": ["self", "tmp_path"]}, {"id": "tests/test_arch.py:70:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 70, "params": []}, {"id": "tests/test_arch.py:72:test_pyproject_toml_malformed_does_not_crash", "label": "test_pyproject_toml_malformed_does_not_crash", "kind": "function", "line": 72, "params": ["self", "tmp_path"]}, {"id": "tests/test_arch.py:79:test_package_json_dependencies_and_dev", "label": "test_package_json_dependencies_and_dev", "kind": "function", "line": 79, "params": ["self", "tmp_path"]}, {"id": "tests/test_arch.py:90:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 90, "params": []}, {"id": "tests/test_arch.py:91:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 91, "params": []}, {"id": "tests/test_arch.py:93:test_package_json_malformed_json_no_crash", "label": "test_package_json_malformed_json_no_crash", "kind": "function", "line": 93, "params": ["self", "tmp_path"]}, {"id": "tests/test_arch.py:100:test_scan_dependencies_merges_all_three", "label": "test_scan_dependencies_merges_all_three", "kind": "function", "line": 100, "params": ["self", "tmp_path"]}, {"id": "tests/test_arch.py:118:TestSequenceChains", "label": "TestSequenceChains", "kind": "function", "line": 118, "params": []}, {"id": "tests/test_arch.py:119:test_simple_chain_endpoint_to_function_to_sql", "label": "test_simple_chain_endpoint_to_function_to_sql", "kind": "function", "line": 119, "params": ["self"]}, {"id": "tests/test_arch.py:137:test_no_entry_points_yields_no_sequences", "label": "test_no_entry_points_yields_no_sequences", "kind": "function", "line": 137, "params": ["self"]}, {"id": "tests/test_arch.py:147:test_cycle_does_not_infinite_loop", "label": "test_cycle_does_not_infinite_loop", "kind": "function", "line": 147, "params": ["self"]}, {"id": "tests/test_arch.py:161:test_max_chains_cap_respected", "label": "test_max_chains_cap_respected", "kind": "function", "line": 161, "params": ["self"]}, {"id": "tests/test_arch.py:174:test_max_depth_cap_respected", "label": "test_max_depth_cap_respected", "kind": "function", "line": 174, "params": ["self"]}, {"id": "tests/test_arch.py:189:test_non_flow_edges_excluded", "label": "test_non_flow_edges_excluded", "kind": "function", "line": 189, "params": ["self"]}, {"id": "tests/test_arch.py:204:TestArchRenderSmoke", "label": "TestArchRenderSmoke", "kind": "function", "line": 204, "params": []}, {"id": "tests/test_arch.py:205:_sample_graph", "label": "_sample_graph", "kind": "function", "line": 205, "params": ["self"]}, {"id": "tests/test_arch.py:214:test_render_arch_html_runs_and_produces_html", "label": "test_render_arch_html_runs_and_produces_html", "kind": "function", "line": 214, "params": ["self", "tmp_path"]}, {"id": "tests/test_arch.py:232:test_render_arch_html_with_dependencies", "label": "test_render_arch_html_with_dependencies", "kind": "function", "line": 232, "params": ["self", "tmp_path"]}], "tests/test_parsers.py": [{"id": "tests/test_parsers.py:0:tests/test_parsers.py", "label": "tests/test_parsers.py", "kind": "module", "line": 0, "params": []}, {"id": "tests/test_parsers.py:17:TestRouteGraph", "label": "TestRouteGraph", "kind": "function", "line": 17, "params": []}, {"id": "tests/test_parsers.py:18:test_add_node", "label": "test_add_node", "kind": "function", "line": 18, "params": ["self"]}, {"id": "tests/test_parsers.py:24:test_add_edge_no_duplicates", "label": "test_add_edge_no_duplicates", "kind": "function", "line": 24, "params": ["self"]}, {"id": "tests/test_parsers.py:31:test_merge", "label": "test_merge", "kind": "function", "line": 31, "params": ["self"]}, {"id": "tests/test_parsers.py:46:TestHtmlParser", "label": "TestHtmlParser", "kind": "function", "line": 46, "params": []}, {"id": "tests/test_parsers.py:47:_parser", "label": "_parser", "kind": "function", "line": 47, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:51:test_detects_button", "label": "test_detects_button", "kind": "function", "line": 51, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:61:test_detects_form_endpoint", "label": "test_detects_form_endpoint", "kind": "function", "line": 61, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:71:test_detects_stylesheet", "label": "test_detects_stylesheet", "kind": "function", "line": 71, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:81:test_detects_event_handler_function", "label": "test_detects_event_handler_function", "kind": "function", "line": 81, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:96:TestReactParser", "label": "TestReactParser", "kind": "function", "line": 96, "params": []}, {"id": "tests/test_parsers.py:97:_parser", "label": "_parser", "kind": "function", "line": 97, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:101:test_detects_function", "label": "test_detects_function", "kind": "function", "line": 101, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:112:test_detects_fetch_endpoint", "label": "test_detects_fetch_endpoint", "kind": "function", "line": 112, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:120:test_detects_axios_endpoint", "label": "test_detects_axios_endpoint", "kind": "function", "line": 120, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:128:test_detects_jsx_event", "label": "test_detects_jsx_event", "kind": "function", "line": 128, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:141:TestPythonParser", "label": "TestPythonParser", "kind": "function", "line": 141, "params": []}, {"id": "tests/test_parsers.py:142:_parser", "label": "_parser", "kind": "function", "line": 142, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:146:test_detects_function", "label": "test_detects_function", "kind": "function", "line": 146, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:156:test_detects_flask_route", "label": "test_detects_flask_route", "kind": "function", "line": 156, "params": ["self", "tmp_path"]}, {"id": "endpoint:GET:/users", "label": "GET /users", "kind": "endpoint", "line": 163, "params": []}, {"id": "endpoint:POST:/users", "label": "POST /users", "kind": "endpoint", "line": 163, "params": []}, {"id": "tests/test_parsers.py:173:test_detects_fastapi_route", "label": "test_detects_fastapi_route", "kind": "function", "line": 173, "params": ["self", "tmp_path"]}, {"id": "endpoint:GET:/items/{item_id}", "label": "GET /items/{item_id}", "kind": "endpoint", "line": 180, "params": []}, {"id": "tests/test_parsers.py:190:test_detects_sql_raw", "label": "test_detects_sql_raw", "kind": "function", "line": 190, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:193:SQL:SELECT * FROM users ", "label": "SELECT * FROM users WHERE id = %s", "kind": "sql", "line": 193, "params": []}, {"id": "tests/test_parsers.py:205:TestNodejsParser", "label": "TestNodejsParser", "kind": "function", "line": 205, "params": []}, {"id": "tests/test_parsers.py:206:_parser", "label": "_parser", "kind": "function", "line": 206, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:210:test_detects_express_route", "label": "test_detects_express_route", "kind": "function", "line": 210, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:223:TestFlutterParser", "label": "TestFlutterParser", "kind": "function", "line": 223, "params": []}, {"id": "tests/test_parsers.py:224:_parser", "label": "_parser", "kind": "function", "line": 224, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:228:test_detects_widget", "label": "test_detects_widget", "kind": "function", "line": 228, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:249:test_detects_http_call", "label": "test_detects_http_call", "kind": "function", "line": 249, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:262:TestAndroidParser", "label": "TestAndroidParser", "kind": "function", "line": 262, "params": []}, {"id": "tests/test_parsers.py:263:_parser", "label": "_parser", "kind": "function", "line": 263, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:267:test_detects_activity", "label": "test_detects_activity", "kind": "function", "line": 267, "params": ["self", "tmp_path"]}, {"id": "tests/test_parsers.py:283:test_detects_retrofit_route", "label": "test_detects_retrofit_route", "kind": "function", "line": 283, "params": ["self", "tmp_path"]}], "wenuroute/__init__.py": [{"id": "wenuroute/__init__.py:0:wenuroute/__init__.py", "label": "wenuroute/__init__.py", "kind": "module", "line": 0, "params": []}], "wenuroute/analyzer.py": [{"id": "wenuroute/analyzer.py:0:wenuroute/analyzer.py", "label": "wenuroute/analyzer.py", "kind": "module", "line": 0, "params": []}, {"id": "wenuroute/analyzer.py:12:Analyzer", "label": "Analyzer", "kind": "function", "line": 12, "params": []}, {"id": "wenuroute/analyzer.py:33:__init__", "label": "__init__", "kind": "function", "line": 33, "params": ["self", "project_root", "progress_callback"]}, {"id": "wenuroute/analyzer.py:55:analyze", "label": "analyze", "kind": "function", "line": 55, "params": ["self"]}, {"id": "wenuroute/analyzer.py:72:_collect_files", "label": "_collect_files", "kind": "function", "line": 72, "params": ["self"]}, {"id": "wenuroute/analyzer.py:88:_parsers_for", "label": "_parsers_for", "kind": "function", "line": 88, "params": ["self", "path"]}, {"id": "wenuroute/analyzer.py:90:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 90, "params": []}], "wenuroute/arch/__init__.py": [{"id": "wenuroute/arch/__init__.py:0:wenuroute/arch/__init__.py", "label": "wenuroute/arch/__init__.py", "kind": "module", "line": 0, "params": []}], "wenuroute/arch/links.py": [{"id": "wenuroute/arch/links.py:0:wenuroute/arch/links.py", "label": "wenuroute/arch/links.py", "kind": "module", "line": 0, "params": []}, {"id": "endpoint:GET:/api/users", "label": "GET /api/users", "kind": "endpoint", "line": 6, "params": []}, {"id": "wenuroute/arch/links.py:49:_parse_endpoint_id", "label": "_parse_endpoint_id", "kind": "function", "line": 49, "params": ["ep_id"]}, {"id": "wenuroute/arch/links.py:63:_normalise_path", "label": "_normalise_path", "kind": "function", "line": 63, "params": ["raw_path"]}, {"id": "wenuroute/arch/links.py:75:_tail_match", "label": "_tail_match", "kind": "function", "line": 75, "params": ["a", "b"]}, {"id": "wenuroute/arch/links.py:96:_js_candidates", "label": "_js_candidates", "kind": "function", "line": 96, "params": ["from_file", "imported"]}, {"id": "wenuroute/arch/links.py:111:_py_candidates", "label": "_py_candidates", "kind": "function", "line": 111, "params": ["from_file", "dotted"]}, {"id": "wenuroute/arch/links.py:129:_resolve_internal", "label": "_resolve_internal", "kind": "function", "line": 129, "params": ["from_file", "imported", "files"]}, {"id": "wenuroute/arch/links.py:141:_external_root", "label": "_external_root", "kind": "function", "line": 141, "params": ["imported"]}, {"id": "wenuroute/arch/links.py:151:build_file_links", "label": "build_file_links", "kind": "function", "line": 151, "params": ["code_graph", "dependency_graph"]}, {"id": "wenuroute/arch/links.py:177:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 177, "params": []}, {"id": "wenuroute/arch/links.py:178:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 178, "params": []}, {"id": "wenuroute/arch/links.py:191:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 191, "params": []}, {"id": "wenuroute/arch/links.py:202:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 202, "params": []}, {"id": "wenuroute/arch/links.py:205:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 205, "params": []}], "wenuroute/arch/manifest.py": [{"id": "wenuroute/arch/manifest.py:0:wenuroute/arch/manifest.py", "label": "wenuroute/arch/manifest.py", "kind": "module", "line": 0, "params": []}, {"id": "wenuroute/arch/manifest.py:51:_find_manifests", "label": "_find_manifests", "kind": "function", "line": 51, "params": ["project_root", "filename"]}, {"id": "wenuroute/arch/manifest.py:59:_manifest_node", "label": "_manifest_node", "kind": "function", "line": 59, "params": ["rel_path"]}, {"id": "wenuroute/arch/manifest.py:68:_dependency_node", "label": "_dependency_node", "kind": "function", "line": 68, "params": ["ecosystem", "name"]}, {"id": "wenuroute/arch/manifest.py:77:_scan_requirements_txt", "label": "_scan_requirements_txt", "kind": "function", "line": 77, "params": ["path", "rel"]}, {"id": "wenuroute/arch/manifest.py:106:_dep_name_from_pep508", "label": "_dep_name_from_pep508", "kind": "function", "line": 106, "params": ["spec"]}, {"id": "wenuroute/arch/manifest.py:111:_dep_version_from_pep508", "label": "_dep_version_from_pep508", "kind": "function", "line": 111, "params": ["spec"]}, {"id": "wenuroute/arch/manifest.py:117:_scan_pyproject_toml", "label": "_scan_pyproject_toml", "kind": "function", "line": 117, "params": ["path", "rel"]}, {"id": "wenuroute/arch/manifest.py:125:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 125, "params": []}, {"id": "wenuroute/arch/manifest.py:132:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 132, "params": []}, {"id": "wenuroute/arch/manifest.py:142:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 142, "params": []}, {"id": "wenuroute/arch/manifest.py:159:_scan_package_json", "label": "_scan_package_json", "kind": "function", "line": 159, "params": ["path", "rel"]}, {"id": "wenuroute/arch/manifest.py:173:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 173, "params": []}, {"id": "wenuroute/arch/manifest.py:186:scan_dependencies", "label": "scan_dependencies", "kind": "function", "line": 186, "params": ["project_root"]}], "wenuroute/arch/render.py": [{"id": "wenuroute/arch/render.py:0:wenuroute/arch/render.py", "label": "wenuroute/arch/render.py", "kind": "module", "line": 0, "params": []}, {"id": "wenuroute/arch/render.py:52:_short_name", "label": "_short_name", "kind": "function", "line": 52, "params": ["file_path"]}, {"id": "wenuroute/arch/render.py:56:_build_architecture_data", "label": "_build_architecture_data", "kind": "function", "line": 56, "params": ["code_graph", "dependency_graph"]}, {"id": "wenuroute/arch/render.py:79:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 79, "params": []}, {"id": "wenuroute/arch/render.py:80:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 80, "params": []}, {"id": "wenuroute/arch/render.py:92:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 92, "params": []}, {"id": "wenuroute/arch/render.py:110:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 110, "params": []}, {"id": "wenuroute/arch/render.py:111:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 111, "params": []}, {"id": "wenuroute/arch/render.py:125:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 125, "params": []}, {"id": "wenuroute/arch/render.py:126:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 126, "params": []}, {"id": "wenuroute/arch/render.py:127:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 127, "params": []}, {"id": "wenuroute/arch/render.py:128:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 128, "params": []}, {"id": "wenuroute/arch/render.py:137:_build_network_data", "label": "_build_network_data", "kind": "function", "line": 137, "params": ["arch_data", "code_graph", "dependency_graph"]}, {"id": "wenuroute/arch/render.py:157:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 157, "params": []}, {"id": "wenuroute/arch/render.py:160:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 160, "params": []}, {"id": "wenuroute/arch/render.py:161:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 161, "params": []}, {"id": "wenuroute/arch/render.py:168:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 168, "params": []}, {"id": "wenuroute/arch/render.py:182:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 182, "params": []}, {"id": "wenuroute/arch/render.py:184:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 184, "params": []}, {"id": "wenuroute/arch/render.py:200:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 200, "params": []}, {"id": "wenuroute/arch/render.py:349:_render_library_html", "label": "_render_library_html", "kind": "function", "line": 349, "params": []}, {"id": "wenuroute/arch/render.py:377:_render_roadmap_section", "label": "_render_roadmap_section", "kind": "function", "line": 377, "params": ["view_id", "icon", "title", "desc"]}, {"id": "wenuroute/arch/render.py:908:render_arch_html", "label": "render_arch_html", "kind": "function", "line": 908, "params": ["code_graph", "dependency_graph", "output"]}, {"id": "wenuroute/arch/render.py:938:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 938, "params": []}, {"id": "wenuroute/arch/render.py:939:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 939, "params": []}, {"id": "wenuroute/arch/render.py:946:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 946, "params": []}, {"id": "wenuroute/arch/render.py:948:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 948, "params": []}], "wenuroute/arch/sequence.py": [{"id": "wenuroute/arch/sequence.py:0:wenuroute/arch/sequence.py", "label": "wenuroute/arch/sequence.py", "kind": "module", "line": 0, "params": []}, {"id": "wenuroute/arch/sequence.py:31:_build_flow_adjacency", "label": "_build_flow_adjacency", "kind": "function", "line": 31, "params": ["graph"]}, {"id": "wenuroute/arch/sequence.py:44:_dfs_chains", "label": "_dfs_chains", "kind": "function", "line": 44, "params": ["node_id", "adjacency", "visited", "depth"]}, {"id": "wenuroute/arch/sequence.py:51:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 51, "params": []}, {"id": "wenuroute/arch/sequence.py:72:_build_sequence", "label": "_build_sequence", "kind": "function", "line": 72, "params": ["graph", "seq_id", "steps"]}, {"id": "wenuroute/arch/sequence.py:99:derive_sequences", "label": "derive_sequences", "kind": "function", "line": 99, "params": ["graph"]}], "wenuroute/cli.py": [{"id": "wenuroute/cli.py:0:wenuroute/cli.py", "label": "wenuroute/cli.py", "kind": "module", "line": 0, "params": []}, {"id": "wenuroute/cli.py:55:main", "label": "main", "kind": "function", "line": 55, "params": ["project", "output", "fmt", "verbose", "arch"]}, {"id": "wenuroute/cli.py:88:_progress", "label": "_progress", "kind": "function", "line": 88, "params": ["msg"]}], "wenuroute/graph.py": [{"id": "wenuroute/graph.py:0:wenuroute/graph.py", "label": "wenuroute/graph.py", "kind": "module", "line": 0, "params": []}, {"id": "wenuroute/graph.py:80:_detect_layer", "label": "_detect_layer", "kind": "function", "line": 80, "params": ["file_path"]}, {"id": "wenuroute/graph.py:772:_build_sidebar_html", "label": "_build_sidebar_html", "kind": "function", "line": 772, "params": ["node_meta", "colour_by_kind"]}, {"id": "wenuroute/graph.py:782:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 782, "params": []}, {"id": "wenuroute/graph.py:783:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 783, "params": []}, {"id": "wenuroute/graph.py:789:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 789, "params": []}, {"id": "wenuroute/graph.py:828:_inject_enhancements", "label": "_inject_enhancements", "kind": "function", "line": 828, "params": ["html", "node_meta", "colour_by_kind"]}, {"id": "wenuroute/graph.py:853:render_html", "label": "render_html", "kind": "function", "line": 853, "params": ["graph", "output"]}, {"id": "wenuroute/graph.py:899:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 899, "params": []}, {"id": "wenuroute/graph.py:900:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 900, "params": []}, {"id": "wenuroute/graph.py:941:render_console", "label": "render_console", "kind": "function", "line": 941, "params": ["graph"]}, {"id": "wenuroute/graph.py:963:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 963, "params": []}], "wenuroute/models.py": [{"id": "wenuroute/models.py:0:wenuroute/models.py", "label": "wenuroute/models.py", "kind": "module", "line": 0, "params": []}, {"id": "wenuroute/models.py:10:NodeKind", "label": "NodeKind", "kind": "function", "line": 10, "params": []}, {"id": "wenuroute/models.py:25:RouteNode", "label": "RouteNode", "kind": "function", "line": 25, "params": []}, {"id": "wenuroute/models.py:36:__hash__", "label": "__hash__", "kind": "function", "line": 36, "params": ["self"]}, {"id": "wenuroute/models.py:39:__eq__", "label": "__eq__", "kind": "function", "line": 39, "params": ["self", "other"]}, {"id": "wenuroute/models.py:44:RouteEdge", "label": "RouteEdge", "kind": "function", "line": 44, "params": []}, {"id": "wenuroute/models.py:51:__hash__", "label": "__hash__", "kind": "function", "line": 51, "params": ["self"]}, {"id": "wenuroute/models.py:54:__eq__", "label": "__eq__", "kind": "function", "line": 54, "params": ["self", "other"]}, {"id": "wenuroute/models.py:64:RouteGraph", "label": "RouteGraph", "kind": "function", "line": 64, "params": []}, {"id": "wenuroute/models.py:70:add_node", "label": "add_node", "kind": "function", "line": 70, "params": ["self", "node"]}, {"id": "wenuroute/models.py:73:add_edge", "label": "add_edge", "kind": "function", "line": 73, "params": ["self", "edge"]}, {"id": "wenuroute/models.py:77:merge", "label": "merge", "kind": "function", "line": 77, "params": ["self", "other"]}], "wenuroute/parsers/__init__.py": [{"id": "wenuroute/parsers/__init__.py:0:wenuroute/parsers/__init__.py", "label": "wenuroute/parsers/__init__.py", "kind": "module", "line": 0, "params": []}], "wenuroute/parsers/android.py": [{"id": "wenuroute/parsers/android.py:0:wenuroute/parsers/android.py", "label": "wenuroute/parsers/android.py", "kind": "module", "line": 0, "params": []}, {"id": "wenuroute/parsers/android.py:67:AndroidParser", "label": "AndroidParser", "kind": "function", "line": 67, "params": []}, {"id": "wenuroute/parsers/android.py:72:parse", "label": "parse", "kind": "function", "line": 72, "params": ["self", "path"]}], "wenuroute/parsers/base.py": [{"id": "wenuroute/parsers/base.py:0:wenuroute/parsers/base.py", "label": "wenuroute/parsers/base.py", "kind": "module", "line": 0, "params": []}, {"id": "wenuroute/parsers/base.py:11:BaseParser", "label": "BaseParser", "kind": "function", "line": 11, "params": []}, {"id": "wenuroute/parsers/base.py:17:__init__", "label": "__init__", "kind": "function", "line": 17, "params": ["self", "project_root"]}, {"id": "wenuroute/parsers/base.py:24:can_parse", "label": "can_parse", "kind": "function", "line": 24, "params": ["self", "path"]}, {"id": "wenuroute/parsers/base.py:29:parse", "label": "parse", "kind": "function", "line": 29, "params": ["self", "path"]}, {"id": "wenuroute/parsers/base.py:36:_rel", "label": "_rel", "kind": "function", "line": 36, "params": ["self", "path"]}, {"id": "wenuroute/parsers/base.py:43:_node_id", "label": "_node_id", "kind": "function", "line": 43, "params": ["self", "path", "name", "line"]}], "wenuroute/parsers/flutter.py": [{"id": "wenuroute/parsers/flutter.py:0:wenuroute/parsers/flutter.py", "label": "wenuroute/parsers/flutter.py", "kind": "module", "line": 0, "params": []}, {"id": "wenuroute/parsers/flutter.py:45:FlutterParser", "label": "FlutterParser", "kind": "function", "line": 45, "params": []}, {"id": "wenuroute/parsers/flutter.py:50:parse", "label": "parse", "kind": "function", "line": 50, "params": ["self", "path"]}], "wenuroute/parsers/html.py": [{"id": "wenuroute/parsers/html.py:0:wenuroute/parsers/html.py", "label": "wenuroute/parsers/html.py", "kind": "module", "line": 0, "params": []}, {"id": "wenuroute/parsers/html.py:20:HtmlParser", "label": "HtmlParser", "kind": "function", "line": 20, "params": []}, {"id": "wenuroute/parsers/html.py:25:parse", "label": "parse", "kind": "function", "line": 25, "params": ["self", "path"]}, {"id": "wenuroute/parsers/html.py:37:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 37, "params": []}, {"id": "wenuroute/parsers/html.py:62:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 62, "params": []}, {"id": "wenuroute/parsers/html.py:92:_process_element", "label": "_process_element", "kind": "function", "line": 92, "params": ["self", "graph", "path", "rel", "module_id", "tag"]}, {"id": "wenuroute/parsers/html.py:101:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 101, "params": []}, {"id": "wenuroute/parsers/html.py:143:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 143, "params": []}, {"id": "wenuroute/parsers/html.py:153:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 153, "params": []}, {"id": "wenuroute/parsers/html.py:154:ORM:get", "label": "ORM.get()", "kind": "sql", "line": 154, "params": []}], "wenuroute/parsers/nodejs.py": [{"id": "wenuroute/parsers/nodejs.py:0:wenuroute/parsers/nodejs.py", "label": "wenuroute/parsers/nodejs.py", "kind": "module", "line": 0, "params": []}, {"id": "wenuroute/parsers/nodejs.py:44:NodejsParser", "label": "NodejsParser", "kind": "function", "line": 44, "params": []}, {"id": "wenuroute/parsers/nodejs.py:49:parse", "label": "parse", "kind": "function", "line": 49, "params": ["self", "path"]}], "wenuroute/parsers/python.py": [{"id": "wenuroute/parsers/python.py:0:wenuroute/parsers/python.py", "label": "wenuroute/parsers/python.py", "kind": "module", "line": 0, "params": []}, {"id": "wenuroute/parsers/python.py:42:PythonParser", "label": "PythonParser", "kind": "function", "line": 42, "params": []}, {"id": "wenuroute/parsers/python.py:47:parse", "label": "parse", "kind": "function", "line": 47, "params": ["self", "path"]}, {"id": "wenuroute/parsers/python.py:139:_walk_imports", "label": "_walk_imports", "kind": "function", "line": 139, "params": ["self", "graph", "tree", "module_id"]}, {"id": "wenuroute/parsers/python.py:162:_add_import", "label": "_add_import", "kind": "function", "line": 162, "params": ["graph", "module_id", "dotted"]}, {"id": "wenuroute/parsers/python.py:169:_walk_ast", "label": "_walk_ast", "kind": "function", "line": 169, "params": ["self", "graph", "tree", "path", "rel", "module_id"]}, {"id": "wenuroute/parsers/python.py:181:_params", "label": "_params", "kind": "function", "line": 181, "params": ["node"]}, {"id": "wenuroute/parsers/python.py:185:_visit", "label": "_visit", "kind": "function", "line": 185, "params": ["node", "parent_id"]}, {"id": "wenuroute/parsers/python.py:227:_handle_call", "label": "_handle_call", "kind": "function", "line": 227, "params": ["node", "parent_id"]}], "wenuroute/parsers/react.py": [{"id": "wenuroute/parsers/react.py:0:wenuroute/parsers/react.py", "label": "wenuroute/parsers/react.py", "kind": "module", "line": 0, "params": []}, {"id": "wenuroute/parsers/react.py:71:ReactParser", "label": "ReactParser", "kind": "function", "line": 71, "params": []}, {"id": "wenuroute/parsers/react.py:76:parse", "label": "parse", "kind": "function", "line": 76, "params": ["self", "path"]}]}, "dependencies": [{"name": "beautifulsoup4", "ecosystem": "pip", "version": ">=4.12", "dev": false, "manifest": "pyproject.toml", "optional_group": null}, {"name": "click", "ecosystem": "pip", "version": ">=8.1", "dev": false, "manifest": "pyproject.toml", "optional_group": null}, {"name": "lxml", "ecosystem": "pip", "version": ">=4.9", "dev": false, "manifest": "pyproject.toml", "optional_group": null}, {"name": "networkx", "ecosystem": "pip", "version": ">=3.1", "dev": false, "manifest": "pyproject.toml", "optional_group": null}, {"name": "pyvis", "ecosystem": "pip", "version": ">=0.3.2", "dev": false, "manifest": "pyproject.toml", "optional_group": null}, {"name": "rich", "ecosystem": "pip", "version": ">=13.0", "dev": false, "manifest": "pyproject.toml", "optional_group": null}, {"name": "tomli", "ecosystem": "pip", "version": ">=2.0", "dev": false, "manifest": "pyproject.toml", "optional_group": null}]};
+  var NET = {"nodes": [{"id": "tests/__init__.py", "kind": "file", "label": "__init__.py", "title": "tests/__init__.py", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 1}, {"id": "tests/test_arch.py", "kind": "file", "label": "test_arch.py", "title": "tests/test_arch.py\n20 function · 3 sql", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 23}, {"id": "tests/test_parsers.py", "kind": "file", "label": "test_parsers.py", "title": "tests/test_parsers.py\n33 function · 3 endpoint · 1 sql", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 37}, {"id": "wenuroute/__init__.py", "kind": "file", "label": "__init__.py", "title": "wenuroute/__init__.py", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 1}, {"id": "wenuroute/analyzer.py", "kind": "file", "label": "analyzer.py", "title": "wenuroute/analyzer.py\n5 function · 1 sql", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 6}, {"id": "wenuroute/arch/__init__.py", "kind": "file", "label": "__init__.py", "title": "wenuroute/arch/__init__.py", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 1}, {"id": "wenuroute/arch/links.py", "kind": "file", "label": "links.py", "title": "wenuroute/arch/links.py\n8 function · 5 sql · 1 endpoint", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 14}, {"id": "wenuroute/arch/manifest.py", "kind": "file", "label": "manifest.py", "title": "wenuroute/arch/manifest.py\n9 function · 4 sql", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 13}, {"id": "wenuroute/arch/render.py", "kind": "file", "label": "render.py", "title": "wenuroute/arch/render.py\n6 function · 20 sql", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 26}, {"id": "wenuroute/arch/sequence.py", "kind": "file", "label": "sequence.py", "title": "wenuroute/arch/sequence.py\n4 function · 1 sql", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 5}, {"id": "wenuroute/cli.py", "kind": "file", "label": "cli.py", "title": "wenuroute/cli.py\n2 function", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 2}, {"id": "wenuroute/graph.py", "kind": "file", "label": "graph.py", "title": "wenuroute/graph.py\n5 function · 6 sql", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 11}, {"id": "wenuroute/models.py", "kind": "file", "label": "models.py", "title": "wenuroute/models.py\n11 function", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 11}, {"id": "wenuroute/parsers/__init__.py", "kind": "file", "label": "__init__.py", "title": "wenuroute/parsers/__init__.py", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 1}, {"id": "wenuroute/parsers/android.py", "kind": "file", "label": "android.py", "title": "wenuroute/parsers/android.py\n2 function", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 2}, {"id": "wenuroute/parsers/base.py", "kind": "file", "label": "base.py", "title": "wenuroute/parsers/base.py\n6 function", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 6}, {"id": "wenuroute/parsers/flutter.py", "kind": "file", "label": "flutter.py", "title": "wenuroute/parsers/flutter.py\n2 function", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 2}, {"id": "wenuroute/parsers/html.py", "kind": "file", "label": "html.py", "title": "wenuroute/parsers/html.py\n3 function · 6 sql", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 9}, {"id": "wenuroute/parsers/nodejs.py", "kind": "file", "label": "nodejs.py", "title": "wenuroute/parsers/nodejs.py\n2 function", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 2}, {"id": "wenuroute/parsers/python.py", "kind": "file", "label": "python.py", "title": "wenuroute/parsers/python.py\n8 function", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 8}, {"id": "wenuroute/parsers/react.py", "kind": "file", "label": "react.py", "title": "wenuroute/parsers/react.py\n2 function", "color": "#4CAF50", "shape": "box", "layer": "backend", "value": 2}, {"id": "dep::rich", "kind": "dependency", "label": "rich", "title": "rich >=13.0", "color": "#FFC107", "shape": "diamond", "layer": "dependency", "value": 1}, {"id": "dep::pyvis", "kind": "dependency", "label": "pyvis", "title": "pyvis >=0.3.2", "color": "#FFC107", "shape": "diamond", "layer": "dependency", "value": 1}, {"id": "dep::tomli", "kind": "dependency", "label": "tomli", "title": "tomli >=2.0", "color": "#FFC107", "shape": "diamond", "layer": "dependency", "value": 1}, {"id": "dep::click", "kind": "dependency", "label": "click", "title": "click >=8.1", "color": "#FFC107", "shape": "diamond", "layer": "dependency", "value": 1}], "edges": [{"from": "tests/test_arch.py", "to": "wenuroute/arch/manifest.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "tests/test_arch.py", "to": "wenuroute/arch/render.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "tests/test_arch.py", "to": "wenuroute/arch/sequence.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "tests/test_arch.py", "to": "wenuroute/models.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "tests/test_parsers.py", "to": "wenuroute/models.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "tests/test_parsers.py", "to": "wenuroute/parsers/android.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "tests/test_parsers.py", "to": "wenuroute/parsers/flutter.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "tests/test_parsers.py", "to": "wenuroute/parsers/html.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "tests/test_parsers.py", "to": "wenuroute/parsers/nodejs.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "tests/test_parsers.py", "to": "wenuroute/parsers/python.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "tests/test_parsers.py", "to": "wenuroute/parsers/react.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/analyzer.py", "to": "wenuroute/models.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/analyzer.py", "to": "wenuroute/parsers/__init__.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/arch/__init__.py", "to": "wenuroute/arch/render.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/arch/links.py", "to": "wenuroute/models.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/arch/manifest.py", "to": "wenuroute/models.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/arch/render.py", "to": "wenuroute/arch/links.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/arch/render.py", "to": "wenuroute/arch/sequence.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/arch/render.py", "to": "wenuroute/graph.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/arch/render.py", "to": "wenuroute/models.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/arch/sequence.py", "to": "wenuroute/models.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/cli.py", "to": "wenuroute/__init__.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/cli.py", "to": "wenuroute/analyzer.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/cli.py", "to": "wenuroute/arch/__init__.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/cli.py", "to": "wenuroute/arch/manifest.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/cli.py", "to": "wenuroute/graph.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/graph.py", "to": "wenuroute/models.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/__init__.py", "to": "wenuroute/parsers/android.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/__init__.py", "to": "wenuroute/parsers/base.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/__init__.py", "to": "wenuroute/parsers/flutter.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/__init__.py", "to": "wenuroute/parsers/html.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/__init__.py", "to": "wenuroute/parsers/nodejs.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/__init__.py", "to": "wenuroute/parsers/python.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/__init__.py", "to": "wenuroute/parsers/react.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/android.py", "to": "wenuroute/models.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/android.py", "to": "wenuroute/parsers/base.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/base.py", "to": "wenuroute/models.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/flutter.py", "to": "wenuroute/models.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/flutter.py", "to": "wenuroute/parsers/base.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/html.py", "to": "wenuroute/models.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/html.py", "to": "wenuroute/parsers/base.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/nodejs.py", "to": "wenuroute/models.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/nodejs.py", "to": "wenuroute/parsers/base.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/python.py", "to": "wenuroute/models.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/python.py", "to": "wenuroute/parsers/base.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/react.py", "to": "wenuroute/models.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/parsers/react.py", "to": "wenuroute/parsers/base.py", "label": "", "title": "imports", "color": "#555577", "dashes": false, "kind": "import"}, {"from": "wenuroute/arch/manifest.py", "to": "dep::tomli", "label": "", "title": "imports (pip)", "color": "#FFC107", "dashes": true, "kind": "dependency"}, {"from": "wenuroute/cli.py", "to": "dep::click", "label": "", "title": "imports (pip)", "color": "#FFC107", "dashes": true, "kind": "dependency"}, {"from": "wenuroute/cli.py", "to": "dep::rich", "label": "", "title": "imports (pip)", "color": "#FFC107", "dashes": true, "kind": "dependency"}, {"from": "wenuroute/graph.py", "to": "dep::pyvis", "label": "", "title": "imports (pip)", "color": "#FFC107", "dashes": true, "kind": "dependency"}], "folded_dependencies": []};
+  var SEQUENCES = [];
+  var KIND_COLOURS = {"ui_element": "#4CAF50", "function": "#2196F3", "endpoint": "#FF9800", "sql": "#F44336", "style": "#9C27B0", "event": "#00BCD4", "module": "#607D8B", "dependency": "#FFC107", "unknown": "#9E9E9E"};
+
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Tabs ─────────────────────────────────────────────────────────────── //
+  function goto(view) {
+    document.querySelectorAll('section[id^="view-"]').forEach(function(s) {
+      s.hidden = (s.id !== 'view-' + view);
+    });
+    document.querySelectorAll('.wa-tab').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.view === view);
+    });
+  }
+  document.querySelectorAll('.wa-tab').forEach(function(btn) {
+    if (btn.disabled) return;
+    btn.addEventListener('click', function() { goto(btn.dataset.view); });
+  });
+  document.querySelectorAll('[data-goto]').forEach(function(el) {
+    el.addEventListener('click', function() { goto(el.dataset.goto); });
+  });
+
+  // ── Architecture view (interactive vis-network diagram) ───────────────── //
+  var LAYER_COLOURS = {frontend:'#2196F3', backend:'#4CAF50', mobile:'#9C27B0', other:'#607D8B', dependency:'#FFC107'};
+  var LAYER_BG      = {frontend:'#0d2444', backend:'#0d2a1a', mobile:'#220d44', other:'#1a1a3a', dependency:'#2a2210'};
+  // Above this many file nodes, directory clustering activates on first paint
+  // instead of the flat per-file view — past this size a flat force-directed
+  // layout of individual files stops being navigable.
+  var AUTO_CLUSTER_THRESHOLD = 80;
+
+  var detailPanel = document.getElementById('wa-detail');
+  var archNetwork = null, visNodes = null, visEdges = null;
+  var nodeById = {};
+  NET.nodes.forEach(function(n) { nodeById[n.id] = n; });
+  var degree = {};
+  NET.edges.forEach(function(e) {
+    degree[e.from] = (degree[e.from] || 0) + 1;
+    degree[e.to] = (degree[e.to] || 0) + 1;
+  });
+
+  var hiddenLayers = new Set();
+  var hiddenEdgeKinds = new Set();
+  var showIsolated = false;
+  var clustersActive = false;
+  var clusterDirMap = {};
+
+  function showFileDetail(file) {
+    var items = ARCH.detail[file] || [];
+    var html = '<button id="wa-detail-close">✕</button><h3>' + escHtml(file) + '</h3>';
+    if (!items.length) {
+      html += '<div class="wa-empty">Sin elementos detectados.</div>';
+    } else {
+      items.forEach(function(it) {
+        var c = KIND_COLOURS[it.kind] || '#9E9E9E';
+        html += '<div class="wa-detail-item"><span class="wa-dot" style="background:' + c + '"></span>' +
+          '<span>' + escHtml(it.label) + ' <span style="color:#6272a4">(' + escHtml(it.kind) +
+          (it.line ? ', línea ' + it.line : '') + ')</span></span></div>';
+      });
+    }
+    renderNeighbours(file, html);
+  }
+
+  function showDependencyDetail(nodeId, label) {
+    var html = '<button id="wa-detail-close">✕</button><h3>🧩 ' + escHtml(label) + '</h3>';
+    renderNeighbours(nodeId, html);
+  }
+
+  // Folded dependencies aren't graph nodes (see _MAX_DEPENDENCY_NODES), so
+  // there's no archNetwork.getConnectedNodes() to lean on — the consumer
+  // list travels with the dependency itself instead.
+  function showFoldedDependencyDetail(dep) {
+    var html = '<button id="wa-detail-close">✕</button><h3>🧩 ' + escHtml(dep.name) +
+      (dep.version ? ' <span style="color:#6272a4;font-size:12px;">' + escHtml(dep.version) + '</span>' : '') + '</h3>' +
+      '<div class="wa-lane-title">Usado por (' + dep.consumers.length + ')</div>';
+    dep.consumers.forEach(function(file) {
+      var n = nodeById[file];
+      html += '<div class="wa-detail-item" style="cursor:pointer" data-nav="' + escHtml(file) + '">' +
+        '<span class="wa-dot" style="background:' + (n ? (LAYER_COLOURS[n.layer] || '#9E9E9E') : '#9E9E9E') + '"></span>' +
+        '<span>' + escHtml(file) + '</span></div>';
+    });
+    detailPanel.innerHTML = html;
+    detailPanel.classList.add('wa-open');
+    document.getElementById('wa-detail-close').addEventListener('click', function() {
+      detailPanel.classList.remove('wa-open');
+    });
+    detailPanel.querySelectorAll('[data-nav]').forEach(function(el) {
+      el.addEventListener('click', function() { selectNode(this.dataset.nav); });
+    });
+  }
+
+  function showClusterDetail(clusterId, dir, ids) {
+    var html = '<button id="wa-detail-close">✕</button><h3>📁 ' + escHtml(dir) + '</h3>' +
+      '<div class="wa-lane-title">' + ids.length + ' archivo(s)</div>';
+    ids.forEach(function(id) {
+      var n = nodeById[id];
+      if (!n) return;
+      html += '<div class="wa-detail-item" style="cursor:pointer" data-nav="' + escHtml(id) + '">' +
+        '<span class="wa-dot" style="background:' + (LAYER_COLOURS[n.layer] || '#9E9E9E') + '"></span>' +
+        '<span>' + escHtml(n.label) + '</span></div>';
+    });
+    detailPanel.innerHTML = html;
+    detailPanel.classList.add('wa-open');
+    document.getElementById('wa-detail-close').addEventListener('click', function() {
+      detailPanel.classList.remove('wa-open');
+    });
+    detailPanel.querySelectorAll('[data-nav]').forEach(function(el) {
+      el.addEventListener('click', function() {
+        if (archNetwork.isCluster(clusterId)) archNetwork.openCluster(clusterId);
+        selectNode(this.dataset.nav);
+      });
+    });
+  }
+
+  function renderNeighbours(nodeId, htmlSoFar) {
+    var html = htmlSoFar;
+    if (archNetwork) {
+      var connected = archNetwork.getConnectedNodes(nodeId);
+      if (connected.length) {
+        html += '<div class="wa-lane-title" style="margin-top:14px;">↔ Relacionado con (' + connected.length + ')</div>';
+        connected.forEach(function(cid) {
+          var n = nodeById[cid];
+          if (!n) {
+            if (String(cid).indexOf('waDirCluster::') === 0) {
+              html += '<div class="wa-detail-item" style="cursor:pointer" data-nav="' + escHtml(cid) + '">' +
+                '<span class="wa-dot" style="background:#607D8B"></span><span>📁 ' +
+                escHtml(String(cid).replace('waDirCluster::', '')) + '</span></div>';
+            }
+            return;
+          }
+          var c = LAYER_COLOURS[n.layer] || '#9E9E9E';
+          html += '<div class="wa-detail-item" style="cursor:pointer" data-nav="' + escHtml(cid) + '">' +
+            '<span class="wa-dot" style="background:' + c + '"></span><span>' + escHtml(n.label) + '</span></div>';
+        });
+      }
+    }
+    detailPanel.innerHTML = html;
+    detailPanel.classList.add('wa-open');
+    document.getElementById('wa-detail-close').addEventListener('click', function() {
+      detailPanel.classList.remove('wa-open');
+    });
+    detailPanel.querySelectorAll('[data-nav]').forEach(function(el) {
+      el.addEventListener('click', function() { selectNode(this.dataset.nav); });
+    });
+  }
+
+  function selectNode(nodeId) {
+    if (!archNetwork) return;
+    archNetwork.selectNodes([nodeId]);
+    archNetwork.focus(nodeId, {scale: 1.1, animation: {duration: 300, easingFunction: 'easeInOutQuad'}});
+    if (archNetwork.isCluster(nodeId)) {
+      var dir = String(nodeId).replace('waDirCluster::', '');
+      showClusterDetail(nodeId, dir, clusterDirMap[dir] || []);
+      return;
+    }
+    var n = nodeById[nodeId];
+    if (!n) return;
+    if (n.kind === 'dependency') showDependencyDetail(nodeId, n.label);
+    else showFileDetail(nodeId);
+  }
+
+  // ── Filters (layer / edge-kind / isolated-node visibility) ────────────── //
+
+  function nodeHidden(n) {
+    if (hiddenLayers.has(n.layer)) return true;
+    if (!showIsolated && n.kind === 'file' && !degree[n.id]) return true;
+    return false;
+  }
+
+  function applyFilters() {
+    if (!visNodes) return;
+    var hiddenIds = {};
+    NET.nodes.forEach(function(n) { hiddenIds[n.id] = nodeHidden(n); });
+    visNodes.update(NET.nodes.map(function(n) { return {id: n.id, hidden: hiddenIds[n.id]}; }));
+    visEdges.update(NET.edges.map(function(e, i) {
+      var hide = hiddenEdgeKinds.has(e.kind) || hiddenIds[e.from] || hiddenIds[e.to];
+      return {id: i, hidden: !!hide};
+    }));
+    updateStats();
+  }
+
+  function updateStats() {
+    var el = document.getElementById('wa-arch-stats');
+    if (!el) return;
+    var totalFiles = NET.nodes.filter(function(n) { return n.kind === 'file'; }).length;
+    var visibleFiles = NET.nodes.filter(function(n) { return n.kind === 'file' && !nodeHidden(n); }).length;
+    var html = 'Archivos: <b>' + visibleFiles + '</b> / ' + totalFiles;
+    if (clustersActive) {
+      html += ' · Carpetas agrupadas: <b>' + Object.keys(clusterDirMap).length + '</b>';
+    }
+    el.innerHTML = html;
+  }
+
+  document.getElementById('wa-arch-filters').addEventListener('change', function(e) {
+    var t = e.target;
+    if (t.dataset.layer) {
+      if (t.checked) hiddenLayers.delete(t.dataset.layer); else hiddenLayers.add(t.dataset.layer);
+      applyFilters();
+    } else if (t.dataset.edgekind) {
+      if (t.checked) hiddenEdgeKinds.delete(t.dataset.edgekind); else hiddenEdgeKinds.add(t.dataset.edgekind);
+      applyFilters();
+    } else if (t.id === 'wa-arch-show-isolated') {
+      showIsolated = t.checked;
+      applyFilters();
+    }
+  });
+
+  // ── Search ──────────────────────────────────────────────────────────── //
+
+  document.getElementById('wa-arch-search').addEventListener('input', function() {
+    var q = this.value.trim().toLowerCase();
+    var infoEl = document.getElementById('wa-arch-search-info');
+    if (!archNetwork) return;
+    if (!q) { infoEl.textContent = ''; return; }
+    var matches = NET.nodes.filter(function(n) {
+      return n.label.toLowerCase().indexOf(q) !== -1 || n.id.toLowerCase().indexOf(q) !== -1;
+    });
+    infoEl.textContent = matches.length + ' resultado(s)';
+    if (!matches.length) return;
+    var visibleIds = {};
+    matches.forEach(function(n) {
+      try {
+        var stack = archNetwork.findNode(n.id);
+        var vid = stack && stack.length ? stack[stack.length - 1] : n.id;
+        visibleIds[vid] = true;
+      } catch (e) { visibleIds[n.id] = true; }
+    });
+    var ids = Object.keys(visibleIds);
+    archNetwork.selectNodes(ids);
+    if (ids.length <= 40) {
+      archNetwork.fit({nodes: ids, animation: {duration: 400, easingFunction: 'easeInOutQuad'}});
+    }
+  });
+
+  // ── Directory clustering ───────────────────────────────────────────────── //
+
+  NET.nodes.forEach(function(n) {
+    if (n.kind !== 'file') return;
+    var slash = n.id.lastIndexOf('/');
+    var dir = slash === -1 ? '(raíz)' : n.id.slice(0, slash);
+    (clusterDirMap[dir] = clusterDirMap[dir] || []).push(n.id);
+  });
+  Object.keys(clusterDirMap).forEach(function(d) {
+    if (clusterDirMap[d].length < 2) delete clusterDirMap[d];
+  });
+
+  function activateClustering() {
+    Object.keys(clusterDirMap).forEach(function(dir) {
+      var ids = clusterDirMap[dir];
+      var layerCounts = {};
+      ids.forEach(function(id) {
+        var n = nodeById[id];
+        if (n) layerCounts[n.layer] = (layerCounts[n.layer] || 0) + 1;
+      });
+      var domLayer = Object.keys(layerCounts).sort(function(a, b) { return layerCounts[b] - layerCounts[a]; })[0] || 'other';
+      var shortDir = dir === '(raíz)' ? dir : dir.split('/').pop();
+      archNetwork.cluster({
+        joinCondition: (function(idSet) { return function(opts) { return idSet.indexOf(opts.id) !== -1; }; })(ids),
+        clusterNodeProperties: {
+          id: 'waDirCluster::' + dir,
+          label: shortDir + ' (' + ids.length + ')',
+          shape: 'square', borderDashes: [6, 3], borderWidth: 2,
+          color: {
+            background: LAYER_BG[domLayer] || LAYER_BG.other,
+            border: LAYER_COLOURS[domLayer] || LAYER_COLOURS.other,
+            highlight: {background: '#2a2a6a', border: '#aaaaff'},
+          },
+          size: Math.min(20 + ids.length * 1.5, 46),
+          font: {color: '#e0e0e0', size: 12, bold: true},
+          title: dir + '
+' + ids.length + ' archivo(s)
+doble clic para expandir',
+        },
+      });
+    });
+    clustersActive = true;
+    document.getElementById('wa-arch-cluster-btn').textContent = '📂 Desagrupar todo';
+    updateStats();
+  }
+
+  function deactivateClustering() {
+    for (var limit = 300; limit > 0; limit--) {
+      var found = false;
+      visNodes.getIds().forEach(function(nid) {
+        if (archNetwork.isCluster(nid)) { archNetwork.openCluster(nid); found = true; }
+      });
+      if (!found) break;
+    }
+    clustersActive = false;
+    document.getElementById('wa-arch-cluster-btn').textContent = '📁 Agrupar por carpeta';
+    updateStats();
+  }
+
+  document.getElementById('wa-arch-cluster-btn').addEventListener('click', function() {
+    if (clustersActive) deactivateClustering(); else activateClustering();
+    archNetwork.fit({animation: {duration: 500, easingFunction: 'easeInOutQuad'}});
+  });
+
+  var archRoot = document.getElementById('wa-architecture-body');
+  if (!NET.nodes.length) {
+    archRoot.innerHTML = '<div class="wa-empty">No se detectaron módulos ni dependencias.</div>';
+  } else {
+    var container = document.getElementById('wa-arch-network');
+    visNodes = new vis.DataSet(NET.nodes.map(function(n) {
+      return {
+        id: n.id, label: n.label, title: n.title, shape: n.shape,
+        color: {background: n.color, border: n.color, highlight: {background: '#2a2a6a', border: '#aaaaff'}},
+        font: {color: '#e0e0e0', size: 12},
+        size: n.shape === 'diamond' ? 14 : Math.min(14 + n.value * 1.5, 34),
+      };
+    }));
+    visEdges = new vis.DataSet(NET.edges.map(function(e, i) {
+      return {
+        id: i, from: e.from, to: e.to, label: e.label, title: e.title,
+        arrows: {to: {enabled: true, scaleFactor: 0.5}},
+        color: {color: e.color, highlight: '#aaaaff'},
+        dashes: e.dashes, font: {size: 9, color: '#888', strokeWidth: 0, align: 'middle'},
+        smooth: {type: 'dynamic'},
+      };
+    }));
+
+    archNetwork = new vis.Network(container, {nodes: visNodes, edges: visEdges}, {
+      physics: {
+        enabled: true, solver: 'forceAtlas2Based',
+        forceAtlas2Based: {gravitationalConstant: -70, centralGravity: 0.01, springLength: 130, springConstant: 0.08},
+        stabilization: {iterations: 150},
+      },
+      interaction: {hover: true, navigationButtons: true, tooltipDelay: 150},
+      layout: {improvedLayout: true},
+    });
+
+    applyFilters();
+    if (Object.keys(clusterDirMap).length && NET.nodes.filter(function(n) { return n.kind === 'file'; }).length > AUTO_CLUSTER_THRESHOLD) {
+      activateClustering();
+    }
+
+    archNetwork.once('stabilized', function() {
+      setTimeout(function() { archNetwork.setOptions({physics: {enabled: false}}); }, 300);
+    });
+
+    archNetwork.on('doubleClick', function(params) {
+      if (params.nodes.length === 1 && archNetwork.isCluster(params.nodes[0])) {
+        archNetwork.openCluster(params.nodes[0]);
+        updateStats();
+      }
+    });
+
+    archNetwork.on('click', function(params) {
+      if (params.nodes.length === 1) selectNode(params.nodes[0]);
+      else detailPanel.classList.remove('wa-open');
+    });
+
+    document.getElementById('wa-arch-fit').addEventListener('click', function() {
+      archNetwork.fit({animation: {duration: 400, easingFunction: 'easeInOutQuad'}});
+    });
+    var physOn = false;
+    var physBtn = document.getElementById('wa-arch-physics');
+    physBtn.addEventListener('click', function() {
+      physOn = !physOn;
+      archNetwork.setOptions({physics: {enabled: physOn}});
+      physBtn.textContent = physOn ? '⏸ Pausar física' : '▶ Activar física';
+    });
+  }
+
+  if (NET.folded_dependencies && NET.folded_dependencies.length) {
+    var foldedRoot = document.getElementById('wa-arch-folded-deps');
+    foldedRoot.innerHTML = '<div id="wa-arch-folded-title">🧩 Otras dependencias usadas, no graficadas (' +
+      NET.folded_dependencies.length + ') — solo las más conectadas se muestran en el diagrama; ' +
+      'clic para ver quién las usa</div>';
+    var foldedWrap = document.createElement('div');
+    foldedWrap.className = 'wa-chip-wrap';
+    NET.folded_dependencies.forEach(function(dep) {
+      var chip = document.createElement('span');
+      chip.className = 'wa-chip wa-chip-clickable';
+      chip.title = dep.consumers.length + ' archivo(s)' + (dep.version ? ' · ' + dep.version : '');
+      chip.textContent = dep.name + ' (' + dep.consumers.length + ')';
+      chip.addEventListener('click', function() { showFoldedDependencyDetail(dep); });
+      foldedWrap.appendChild(chip);
+    });
+    foldedRoot.appendChild(foldedWrap);
+  }
+
+  if (ARCH.dependencies.length) {
+    var depsRoot = document.getElementById('wa-arch-deps');
+    depsRoot.innerHTML = '<div id="wa-arch-deps-title">📦 Todas las dependencias declaradas (' + ARCH.dependencies.length + ')</div>';
+    var chipWrap = document.createElement('div');
+    chipWrap.className = 'wa-chip-wrap';
+    ARCH.dependencies.forEach(function(dep) {
+      var chip = document.createElement('span');
+      chip.className = 'wa-chip' + (dep.dev ? ' wa-chip-dev' : '');
+      chip.title = (dep.manifest || '') + (dep.version ? ' ' + dep.version : '');
+      chip.textContent = dep.name + (dep.version ? ' ' + dep.version : '');
+      chipWrap.appendChild(chip);
+    });
+    depsRoot.appendChild(chipWrap);
+  }
+
+  // ── Sequence view ────────────────────────────────────────────────────── //
+  var seqListEl = document.getElementById('wa-seq-list-items');
+  var seqCanvas = document.getElementById('wa-seq-canvas');
+  var playTimer = null;
+
+  function renderSeqList(filter) {
+    seqListEl.innerHTML = '';
+    var q = (filter || '').toLowerCase();
+    SEQUENCES.filter(function(s) { return !q || s.title.toLowerCase().indexOf(q) !== -1; })
+      .forEach(function(seq) {
+        var item = document.createElement('div');
+        item.className = 'wa-seq-item';
+        item.dataset.id = seq.id;
+        item.textContent = seq.title;
+        item.addEventListener('click', function() {
+          document.querySelectorAll('.wa-seq-item').forEach(function(el) { el.classList.remove('wa-active'); });
+          item.classList.add('wa-active');
+          renderSequenceSvg(seq);
+        });
+        seqListEl.appendChild(item);
+      });
+  }
+
+  document.getElementById('wa-seq-search').addEventListener('input', function() {
+    renderSeqList(this.value);
+  });
+
+  function participantKey(step, singleFile) {
+    return singleFile ? step.kind : (step.file || step.kind);
+  }
+
+  function renderSequenceSvg(seq) {
+    if (playTimer) { clearInterval(playTimer); playTimer = null; }
+    var steps = seq.steps;
+    var files = {};
+    steps.forEach(function(s) { if (s.file) files[s.file] = true; });
+    var singleFile = Object.keys(files).length <= 1;
+
+    var participants = [];
+    var seen = {};
+    steps.forEach(function(s) {
+      var key = participantKey(s, singleFile);
+      if (!seen[key]) { seen[key] = true; participants.push(key); }
+    });
+
+    var LANE_W = 190, STEP_H = 60, TOP = 70, MARGIN = 20;
+    var width = MARGIN * 2 + Math.max(1, participants.length - 1) * LANE_W + 40;
+    var height = TOP + steps.length * STEP_H + 30;
+    var xFor = {};
+    participants.forEach(function(p, i) { xFor[p] = MARGIN + i * LANE_W + 20; });
+
+    var svg = '<svg width="' + width + '" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '">';
+    svg += '<defs><marker id="wa-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">' +
+           '<path d="M0,0 L6,3 L0,6 Z" fill="#7aa2f7"/></marker></defs>';
+
+    participants.forEach(function(p) {
+      var x = xFor[p];
+      svg += '<rect x="' + (x - 65) + '" y="10" width="130" height="34" rx="6" fill="#1e1e3f" stroke="#3d3d6e"/>';
+      svg += '<text x="' + x + '" y="31" text-anchor="middle" fill="#e0e0e0" font-size="11">' +
+             escHtml(p.length > 22 ? '…' + p.slice(-20) : p) + '</text>';
+      svg += '<line x1="' + x + '" y1="44" x2="' + x + '" y2="' + (height - 15) + '" stroke="#3d3d6e" stroke-width="1.5"/>';
+    });
+
+    for (var i = 0; i < steps.length; i++) {
+      var y = TOP + i * STEP_H;
+      var cur = xFor[participantKey(steps[i], singleFile)];
+      var prev = i === 0 ? cur : xFor[participantKey(steps[i - 1], singleFile)];
+      var label = (steps[i].edge_label ? steps[i].edge_label + ': ' : (i === 0 ? '▶ ' : '')) + steps[i].label;
+      var kindColour = KIND_COLOURS[steps[i].kind] || '#9E9E9E';
+
+      svg += '<g class="wa-seq-step" data-index="' + i + '">';
+      if (i > 0 && prev === cur) {
+        // self-call loop
+        svg += '<path d="M' + cur + ',' + y + ' C' + (cur + 40) + ',' + (y - 10) + ' ' + (cur + 40) + ',' + (y + 10) + ' ' + cur + ',' + y + '" ' +
+               'fill="none" stroke="#7aa2f7" stroke-width="1.5" marker-end="url(#wa-arrow)"/>';
+        svg += '<text x="' + (cur + 46) + '" y="' + (y + 4) + '" font-size="10" fill="#9a9ac0">' + escHtml(label) + '</text>';
+      } else {
+        svg += '<line x1="' + prev + '" y1="' + y + '" x2="' + cur + '" y2="' + y + '" stroke="#7aa2f7" stroke-width="1.5" marker-end="url(#wa-arrow)"/>';
+        var midx = (prev + cur) / 2;
+        svg += '<text x="' + midx + '" y="' + (y - 6) + '" text-anchor="middle" font-size="10" fill="#9a9ac0">' + escHtml(label) + '</text>';
+      }
+      svg += '<circle cx="' + cur + '" cy="' + y + '" r="4" fill="' + kindColour + '"/>';
+      svg += '</g>';
+    }
+    svg += '</svg>';
+
+    seqCanvas.innerHTML = svg;
+  }
+
+  document.getElementById('wa-seq-play').addEventListener('click', function() {
+    var steps = document.querySelectorAll('.wa-seq-step');
+    steps.forEach(function(s) { s.classList.remove('wa-visible'); });
+    if (playTimer) clearInterval(playTimer);
+    var i = 0;
+    playTimer = setInterval(function() {
+      if (i >= steps.length) { clearInterval(playTimer); playTimer = null; return; }
+      steps[i].classList.add('wa-visible');
+      i++;
+    }, 400);
+  });
+  document.getElementById('wa-seq-reset').addEventListener('click', function() {
+    if (playTimer) { clearInterval(playTimer); playTimer = null; }
+    document.querySelectorAll('.wa-seq-step').forEach(function(s) { s.classList.add('wa-visible'); });
+  });
+
+  renderSeqList('');
+  if (SEQUENCES.length) {
+    var first = seqListEl.querySelector('.wa-seq-item');
+    if (first) first.click();
+  } else {
+    seqCanvas.innerHTML = '<div class="wa-empty">No se detectaron cadenas de llamada.</div>';
+  }
+})();
+</script></body></html>
